@@ -32,7 +32,6 @@ class ARMATURE_OT_drig_compose(bpy.types.Operator):
                 for child in set.children:
                     compose_set(composer, child)
 
-
         def add_composer():
             bpy.ops.armature.drig_make_composer()
             composer = bpy.data.objects[f"{dnd['composer']}{div}{split_name(context.object,1)}"]
@@ -41,12 +40,18 @@ class ARMATURE_OT_drig_compose(bpy.types.Operator):
             return composer
 
         composer = add_composer()
-        comp_sets = composer.data.collections_all[dnd['master_set']]
-        base_set = composer.data.collections_all[dnd['base_set']]
+        comp_set = composer.data.collections_all[dnd['master_set']]
+        if not composer.data.collections_all.get(dnd['base_set']):
+            base_set = composer.data.collections.new(dnd['base_set'],parent=comp_set)
+        for bone in comp_set.bones_recursive:
+            composer.data.collections_all[dnd['base_set']].assign(bone)
 
         bpy.ops.object.mode_set(mode='EDIT')
-        for set in comp_sets.children: 
+        for set in comp_set.children: 
             compose_set(composer, set)
+        for bone in base_set.bones:
+            if bone.drig_function_type != 'NONE':
+                add_bone_function(composer, bone.name)
         bpy.ops.object.mode_set(mode='OBJECT')
 
         return {'FINISHED'}
@@ -67,12 +72,9 @@ class ARMATURE_OT_drig_make_composer(bpy.types.Operator):
         bd = base.data
         cd.name = f"{dnd['armature']}{div}{split_name(composer,1)}{div}{split_name(bd,-1)}"
 
-        # Er... Why? Don't we need bone groups preserved?
-
-        # for collection in composer.data.collections_all:
-        #     for bone in collection.bones: collection.unassign(bone)
-        for bone in composer.pose.bones: 
+        for bone in composer.data.collections_all[dnd['master_set']].bones_recursive: 
             bone.name = f"{dnd['base']}{div}{bone.name}"
+            bone.use_deform = False
 
         return {'FINISHED'}
 
@@ -87,22 +89,31 @@ def duplicate_bone_EDIT(armature, bone_name, set):
     return copy
 
 def determine_parent_EDIT(armature, bone_name, set):
-    if set.parent.name == dnd['master_set']:
-        equiv = None
-    else:
-        equiv = armature.edit_bones[f"{set.parent.name}{div}{bone_name.split(div)[-1]}"]
-    if armature.edit_bones[bone_name].parent != None:
-        kept = armature.edit_bones[f"{set.name}{div}{split_name(equiv.parent,-1)}"]
-    else:
-        kept = None
-    
+
+    def parent_as_kept():
+        if base_equiv.parent:
+            kept = armature.edit_bones[f"{set.name}{div}{split_name(base_equiv.parent,-1)}"]
+        else:
+            kept = None
+        armature.edit_bones[bone_name].use_connect = connect
+        return kept
+
+    def parent_as_equivalent():
+        if set.parent.name == dnd['master_set']:
+            equiv = None
+        else:
+            equiv = armature.edit_bones[f"{set.parent.name}{div}{bone_name.split(div)[-1]}"]
+        return equiv
+
     method = set.drig_parent_method
-    if method ==   'KEEP':              return kept
-    elif method == 'EQUIV':             return equiv
-    elif method == 'EQUIV_PARENT':      return equiv.parent
+    base_equiv = armature.edit_bones[f"{dnd['base_set']}{div}{bone_name.split(div)[-1]}"]
+    connect = base_equiv.use_connect
+    if method ==   'KEEP':              return parent_as_kept()
+    elif method == 'EQUIV':             return parent_as_equivalent()
+    elif method == 'EQUIV_PARENT':      return parent_as_equivalent().parent
     elif method == 'EQUIV_CHAIN':
-        if not equiv.use_connect:       return equiv
-        if equiv.use_connect:           return kept
+        if not base_equiv.use_connect:       return parent_as_equivalent()
+        if base_equiv.use_connect:           return parent_as_kept()
 
 def add_trans_constraints(object, bone_name, set):
     type = f'COPY_{set.drig_trans_type}'
@@ -116,11 +127,16 @@ def add_trans_constraints(object, bone_name, set):
 
 #    TO-DO
 #   Works on its own! Needs integration / add more settings
-def add_ik_basic(object, bone_name, set):
-    if object.bones[bone_name].drig_function_type == 'IK_BASIC':
-        chain = get_bone_chain(object.bones[bone_name])
+def add_bone_function(object, bone_name):
+    bone = object.data.bones[bone_name]
+    set = object.data.collections_all.get(bone.drig_function_set)
+    if set != None:
+        bone_name = f"{set.name}{div}{bone_name.split(div)[-1]}"
+    if bone.drig_function_type == 'IK_BASIC':
+        
+        chain = get_bone_chain(object.data.bones[bone_name])
         ik = object.pose.bones[chain[0].name].constraints.new('IK')
-        ik.chain_length = len(chain)
+        ik.chain_count = len(chain)
 
 
 classes = [ARMATURE_OT_drig_make_composer, ARMATURE_OT_drig_compose]

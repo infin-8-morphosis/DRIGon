@@ -90,14 +90,12 @@ class ARMATURE_OT_drig_prepare_base(bpy.types.Operator):
         base.data.name = f"{dnd['morph']}{div}{base.name.split(div,1)[1]}{div}MASTER"
         base.drig_fate = 'NEW_TARGET_COMPOSE'
 
-        set_master = base.data.collections.new(dnd['master_set'])
-        set_base = base.data.collections.new(dnd['base_set'],parent=set_master)
-        base.data.collections.new('TEST',parent=set_base)
+        comp_set = base.data.collections.new(dnd['master_set'])
+        base.data.collections.new('SET',parent=comp_set)
 
         bpy.ops.object.mode_set(mode='EDIT')
         for bone in base.data.edit_bones:
-            base.data.collections_all[dnd['base_set']].assign(bone)
-            base.data.collections_all['TEST'].assign(bone)
+            base.data.collections_all['SET'].assign(bone)
         bpy.ops.object.mode_set(mode='OBJECT')
 
         return {'FINISHED'}
