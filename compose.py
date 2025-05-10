@@ -10,7 +10,7 @@ class ARMATURE_OT_drig_compose(bpy.types.Operator):
 
     def execute(self, context):
 
-        def compose_bone(bone):
+        def compose_bone(bone, set):
             bpy.ops.object.mode_set(mode='EDIT')
             dupe = duplicate_bone_EDIT(composer.data, bone, set)
             dupe.parent = determine_parent_EDIT(composer.data, dupe.name, set)
@@ -31,7 +31,7 @@ class ARMATURE_OT_drig_compose(bpy.types.Operator):
                     bpy.ops.object.mode_set(mode='OBJECT')
                     bone_list = list_names(set.bones)
                     for bone in bone_list:
-                        compose_bone(bone)
+                        compose_bone(bone, set)
 
         def add_composer():
             bpy.ops.armature.drig_make_composer()
