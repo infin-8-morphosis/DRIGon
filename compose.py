@@ -24,10 +24,10 @@ class ARMATURE_OT_drig_compose(bpy.types.Operator):
 
         def compose_set(composer, set):
             if set.name != dnd['base_set']:
-            bpy.ops.object.mode_set(mode='OBJECT')
-            bone_list = list_names(set.bones)
-            for bone in bone_list:
-                compose_bone(bone, set)
+                bpy.ops.object.mode_set(mode='OBJECT')
+                bone_list = list_names(set.bones)
+                for bone in bone_list:
+                    compose_bone(bone, set)
             if set.children: 
                 for child in set.children:
                     compose_set(composer, child)
