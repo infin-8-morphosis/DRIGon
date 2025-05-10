@@ -87,10 +87,7 @@ def duplicate_bone_EDIT(armature, bone_name, set):
     return copy
 
 def determine_parent_EDIT(armature, bone_name, set):
-    if set.parent.name == dnd['master_set']:
-        equiv = None
-    else:
-        equiv = armature.edit_bones[f"{set.parent.name}{div}{bone_name.split(div)[-1]}"]
+    equiv = armature.edit_bones[f"{set.parent.name}{div}{bone_name.split(div)[-1]}"]
     if armature.edit_bones[bone_name].parent != None:
         kept = armature.edit_bones[f"{set.name}{div}{split_name(equiv.parent,-1)}"]
     else:
