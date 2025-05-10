@@ -13,12 +13,12 @@ Other rigging add-ons like *Rigify* and *Cloudrig* allow you to rig,
 without getting into the details of how rigging is done in Blender.
 However, they can be too rigid or bloated for particularly strange or simple rigs. 
 
-Drake's Rigging Add-On, or **Drigon**, is geared towards supplementing manual rigging, rather than bypassing it.
+Drake's Rigging Add-On, or **DRIGon**, is geared towards supplementing manual rigging, rather than bypassing it.
 Make simple rigs simpler, or make complex rigs without fighting or altering the add-on.
 
 #### Advice and Considerations
 
-To get the most out of **Drigon**, you'll need some knowledge of rigging in Blender without add-ons.
+To get the most out of **DRIGon**, you'll need some knowledge of rigging in Blender without add-ons.
 In exchange for more freedom, it's on you to set up bones correctly and know how constraints work. 
 
 Have a naming scheme for bones, parent and connect them appropriately, adjust rolls...
@@ -26,15 +26,15 @@ In short, be aware that some features usually simplified by other add-ons,
 will need to be used and adjusted.
 
 If you haven't done at least a bit of manual rigging or used another rigging add-on,
-try to see if it's a gap in your knowledge before asking if it's an issue with **Drigon**!
+try to see if it's a gap in your knowledge before asking if it's an issue with **DRIGon**!
 
 ### Usage
 -------------
 
-**Drigon** is accessed from Armature properties, just like *Rigify* and *Cloudrig*,
+**DRIGon** is accessed from Armature properties, just like *Rigify* and *Cloudrig*,
 to allow you to use them in tandem more conveniently.
 
-Press `Initialise` to setup your blendfile for **Drigon**.
+Press `Initialise` to setup your blendfile for **DRIGon**.
 
 On initialisation, the currently selected armature, prefixed `BASE`, is the **Base**.
 It will be composed into one or more **Targets** (Prefixed with `RIG`), 
@@ -56,10 +56,10 @@ While setting up your own rig, use the example blendfile as a reference.
 
 **Sets** are the subgroups of `COMPOSITION_SETS`. 
 Each one will be used to compose the bones allocated to it, 
-according to the options found in the `Sets` tab of the **Drigon** menu.
+according to the options found in the `Sets` tab of the **DRIGon** menu.
 Options include changing the type parenting or transforms of the composed bones. 
 
-These options are used in **Drigon**'s main function, 'Composing'. 
+These options are used in **DRIGon**'s main function, 'Composing'. 
 Composing is similar to generating a rig in *Rigify* or *Cloudrig*, 
 (Honestly, the name is different mostly just to prevent confusion.) 
 With composing, you get more control over the process.
@@ -72,7 +72,7 @@ All other bone groups are yours to use however you please, no need to adjust you
 ### Structure
 -----------------
 
-The **Composer** is used by **Drigon** in the composing process. 
+The **Composer** is used by **DRIGon** in the composing process. 
 It is usually deleted after composing, but you can disable that for debugging purposes.
 You can also choose whether to finalise the **Target** at all, 
 which can be helpful if you're worried about breaking your rig,
