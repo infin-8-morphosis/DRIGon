@@ -125,7 +125,6 @@ def add_trans_constraints(object, bone_name, set):
         constraint.subtarget = f"{set.parent.name}{div}{bone_name.split(div)[-1]}"
     #alter constraint settings here
 
-#    TO-DO
 #   Works on its own! Needs integration / add more settings
 def add_bone_function(object, bone_name):
     bone = object.data.bones[bone_name]
