@@ -1,5 +1,5 @@
 import bpy #type:ignore
-from .common import split_name, list_names, copy_armature
+from .common import split_name, list_names, copy_armature, get_bone_chain
 from .common import dnd, div, keep_composer
 
 
@@ -37,6 +37,14 @@ def add_trans_constraints(object, bone_name, set):
         constraint.subtarget = f"{set.parent.name}{div}{bone_name.split(div)[-1]}"
     #alter constraint settings here
 
+#    TO-DO
+#   Works on its own! Needs integration / add more settings
+def add_ik_basic(object, bone_name, set):
+    if object.bones[bone_name].drig_function_type == 'IK_BASIC':
+        chain = get_bone_chain(object.bones[bone_name])
+        ik = object.pose.bones[chain[0].name].constraints.new('IK')
+        ik.chain_length = len(chain)
+
 
 class ARMATURE_OT_drig_compose(bpy.types.Operator):
     bl_idname = "armature.drig_compose"
@@ -71,7 +79,7 @@ class ARMATURE_OT_drig_compose(bpy.types.Operator):
             composer.select_set(True)
             context.view_layer.objects.active = composer
             return composer
-        
+
         composer = add_composer()
         comp_sets = composer.data.collections_all[dnd['master_set']]
         base_set = composer.data.collections_all[dnd['base_set']]
