@@ -23,15 +23,15 @@ class ARMATURE_OT_drig_compose(bpy.types.Operator):
             # Set all base_set bones to be non-deforming?
 
         def compose_set(composer, set):
+            if set.name != dnd['base_set']:
+            bpy.ops.object.mode_set(mode='OBJECT')
+            bone_list = list_names(set.bones)
+            for bone in bone_list:
+                compose_bone(bone, set)
             if set.children: 
                 for child in set.children:
                     compose_set(composer, child)
-            else:
-                if set.name != dnd['base_set']:
-                    bpy.ops.object.mode_set(mode='OBJECT')
-                    bone_list = list_names(set.bones)
-                    for bone in bone_list:
-                        compose_bone(bone, set)
+
 
         def add_composer():
             bpy.ops.armature.drig_make_composer()
