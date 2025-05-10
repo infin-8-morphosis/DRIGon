@@ -30,7 +30,7 @@ class BONE_PT_drig_ui_bones(bpy.types.Panel):
         comp_area.prop_search(bone, 'drig_component_set', armature, "collections_all", text="")
 
 class DATA_PT_drig_ui_main(bpy.types.Panel):
-    bl_label = "Drigon"
+    bl_label = "Drigon 0.1"
     bl_space_type = 'PROPERTIES'
     bl_region_type = 'WINDOW'
     bl_context = "data"
