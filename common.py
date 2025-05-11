@@ -34,12 +34,12 @@ def list_names(item_list):
 
 def get_bone_chain(chain_base,list = []):
 	if not chain_base.children:
-		list.append(chain_base)
+		list.append(chain_base.name)
 		return
 	for child in chain_base.children:
 		if child.use_connect == True:
 			get_bone_chain(child,list)
-	list.append(chain_base)
+	list.append(chain_base.name)
 	return list
 
 

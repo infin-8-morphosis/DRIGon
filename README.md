@@ -1,8 +1,3 @@
-TO-DO
-Funcomponents
-- Improve UI a bit
-- Access bone properties via code
-
 ## Drake Rigger
 
 This add-on adds organisational and QoL features to supplement Blender's rigging capabilities.

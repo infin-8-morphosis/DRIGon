@@ -1,5 +1,5 @@
 import bpy #type:ignore
-from .common import split_name, list_names, copy_armature, get_bone_chain
+from .common import split_name, list_names, copy_armature, get_bone_chain, select_bones
 from .common import dnd, div, keep_composer
 
 
@@ -125,17 +125,38 @@ def add_trans_constraints(object, bone_name, set):
         constraint.subtarget = f"{set.parent.name}{div}{bone_name.split(div)[-1]}"
     #alter constraint settings here
 
-#   Works on its own! Needs integration / add more settings
 def add_bone_function(object, bone_name):
+
+    # TO-DO
+    def add_ik_target_EDIT(object, ik, chain):
+        bpy.ops.object.mode_set(mode='EDIT')
+        select_bones(False, object, 'EDIT')
+        bones_EDIT = object.data.edit_bones
+        bones_EDIT[chain[0]].select_tail = True
+        bpy.ops.armature.extrude_move(TRANSFORM_OT_translate={
+            "value":(0, 1, 0),
+            "orient_type":'NORMAL',
+            "orient_matrix":((1, 0, 0), (0, 1, 0), (0, 0, 1))})
+        # assumes the newly created bone is selected
+        ik_bone_name = bpy.context.active_bone.name 
+        bones_EDIT[ik_bone_name].use_connect = False
+        bones_EDIT[ik_bone_name].parent = None # bones_EDIT[chain[-1]].parent
+        bpy.ops.object.mode_set(mode='POSE')
+        bones_POSE = object.pose.bones
+        ik.target = object
+        ik.subtarget = bones_POSE[ik_bone_name].name
+        # This won't work if the constraint name isn't known...
+        
+
     bone = object.data.bones[bone_name]
     set = object.data.collections_all.get(bone.drig_function_set)
     if set != None:
         bone_name = f"{set.name}{div}{bone_name.split(div)[-1]}"
     if bone.drig_function_type == 'IK_BASIC':
-        
         chain = get_bone_chain(object.data.bones[bone_name])
-        ik = object.pose.bones[chain[0].name].constraints.new('IK')
+        ik = object.pose.bones[chain[0]].constraints.new('IK')
         ik.chain_count = len(chain)
+        add_ik_target_EDIT(object, ik, chain)
 
 
 classes = [ARMATURE_OT_drig_make_composer, ARMATURE_OT_drig_compose]
