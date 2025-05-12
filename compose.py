@@ -127,7 +127,7 @@ def add_trans_constraints(object, bone_name, set):
 
 def add_bone_function(object, bone_name):
 
-    # TO-DO
+    # Note: Base is still selected and in edit mode so it also gets targeted. Oops.
     def add_ik_target_EDIT(object, ik, chain):
         bpy.ops.object.mode_set(mode='EDIT')
         select_bones(False, object, 'EDIT')

@@ -40,6 +40,7 @@ def get_bone_chain(chain_base,list = []):
 		if child.use_connect == True:
 			get_bone_chain(child,list)
 	list.append(chain_base.name)
+	assert list[-1] == chain_base.name, "Chain base not last in list."
 	return list
 
 
