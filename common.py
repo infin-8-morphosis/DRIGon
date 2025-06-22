@@ -1,5 +1,7 @@
 import bpy #type:ignore
 
+keep_composer = True
+
 drig_naming_dict = {
                 'divider' : '_',
                 'composer' : 'COMPOSER',
@@ -17,7 +19,6 @@ drig_naming_dict = {
 				'base_set' : 'BASE'}
 dnd = drig_naming_dict
 div = dnd['divider']
-keep_composer = True
 
 
 def split_name(full_name, part: int):
@@ -46,12 +47,11 @@ def get_bone_chain(chain_base,list = []):
 
 # Returns a copy of an armature with desired name and fate. Adds it to scene optionally.
 def copy_armature(old, name, fate: str, link: bool):
-    new = old.copy()
-    new.name = f"{name}{div}{split_name(old, 1)}"
-    new.drig_fate = f"{fate}"
-    if link == True: bpy.context.collection.objects.link(new)
-    return new
-
+	new = old.copy()
+	new.name = f"{name}{div}{split_name(old, 1)}"
+	new.drig_fate = f"{fate}"
+	if link == True: bpy.context.collection.objects.link(new)
+	return new
 
 def select_bones(bool: bool, object, blender_mode, name_list = None): # why is blender_mode here...?
 	if name_list != None:

@@ -16,6 +16,8 @@ class ARMATURE_OT_drig_compose(bpy.types.Operator):
             dupe.parent = determine_parent_EDIT(composer.data, dupe.name, set)
             dupename = dupe.name
             bpy.ops.object.mode_set(mode='OBJECT')
+            g = composer.data.bones.get(dupename)
+            print(g)
             set.assign(composer.data.bones[dupename])
             if set.drig_trans_type != 'NONE':
                 add_trans_constraints(composer, dupename, set)
@@ -32,14 +34,13 @@ class ARMATURE_OT_drig_compose(bpy.types.Operator):
                 for child in set.children:
                     compose_set(composer, child)
 
-        def add_composer():
-            bpy.ops.armature.drig_make_composer()
-            composer = bpy.data.objects[f"{dnd['composer']}{div}{split_name(context.object,1)}"]
-            composer.select_set(True)
-            context.view_layer.objects.active = composer
-            return composer
-
-        composer = add_composer()
+        # Selection: Base
+        bpy.ops.armature.drig_make_composer()
+        composer = bpy.data.objects[f"{dnd['composer']}{div}{split_name(context.object,1)}"]
+        composer.select_set(True) # Selected: Composer | Selection: Composer, Base
+        context.view_layer.objects.active = composer
+        base = context.object.drig_base
+        base.select_set(False) #Deselected: Base | Selection: Composer
         comp_set = composer.data.collections_all[dnd['master_set']]
         if not composer.data.collections_all.get(dnd['base_set']):
             base_set = composer.data.collections.new(dnd['base_set'],parent=comp_set)
@@ -56,6 +57,34 @@ class ARMATURE_OT_drig_compose(bpy.types.Operator):
 
         return {'FINISHED'}
 
+class ARMATURE_OT_drig_finalise(bpy.types.Operator):
+    bl_idname = "armature.drig_finalise"
+    bl_label = "Finalise Composition"
+    bl_options = {'REGISTER', 'UNDO'}
+    
+    def execute(self,context):
+        
+        composer = context.object # Selection: Composer
+        base = composer.drig_base
+        # At some point this will have a function to do this per morph.
+        if base.drig_target_main:
+            target = base.drig_target_main
+        else:
+            bpy.ops.armature.drig_make_target()
+            target = bpy.data.objects[f"{dnd['target']}{div}{split_name(composer,1)}"]
+            composer.drig_target_main = target
+            base.drig_target_main = target
+        target.select_set(True) # Seleced: RIG | Selection: Comp, RIG
+        bpy.ops.object.mode_set(mode='OBJECT')
+        bpy.ops.object.mode_set(mode='EDIT')
+        for bone in composer.data.bones:
+            transfer_bone_EDIT(composer, target, bone.name)
+            print(bone.name)
+        # for bone in composer
+        # make new bone with matching matrix
+
+        # copy bones from composer to target in ONE edit mode
+        return {'FINISHED'}
 
 # Copies base, adds new armature, removes all bones from bone groups, except COMPOSITION_SETS.
 class ARMATURE_OT_drig_make_composer(bpy.types.Operator):
@@ -65,27 +94,63 @@ class ARMATURE_OT_drig_make_composer(bpy.types.Operator):
     
     def execute(self,context):
         
-        base = context.object.drig_base
+        # Selection: Base
+        base = context.object.drig_base 
         composer = copy_armature(base, dnd['composer'], 'FINALISE', keep_composer)
         composer.data = base.data.copy()
+        composer.drig_base = base
         cd = composer.data
         bd = base.data
-        cd.name = f"{dnd['armature']}{div}{split_name(composer,1)}{div}{split_name(bd,-1)}"
+        cd.name = f"{dnd['composer']}{div}{split_name(composer,1)}{div}{split_name(bd,-1)}"
 
         for bone in composer.data.collections_all[dnd['master_set']].bones_recursive: 
             bone.name = f"{dnd['base']}{div}{bone.name}"
             bone.use_deform = False
+        
 
         return {'FINISHED'}
 
 
+def map_bone_settings(target, base, final):
+        if final:
+            pass
+            # target.use_connect = base.use_connect
+        target.head = base.head
+        target.tail = base.tail
+        target.matrix = base.matrix
+
+        target.parent = base.parent
+        target.inherit_scale = base.inherit_scale
+        target.use_deform = base.use_deform
+        target.bbone_segments = base.bbone_segments
+        target.bbone_rollout = base.bbone_rollout
+        target.bbone_rollin = base.bbone_rollin
+        target.bbone_easein = base.bbone_easein
+        target.bbone_easeout = base.bbone_easeout
+        target.bbone_x = base.bbone_x
+        target.bbone_z = base.bbone_z
+        target.bbone_handle_type_start = base.bbone_handle_type_start
+        target.bbone_custom_handle_start = base.bbone_custom_handle_start
+        target.bbone_handle_type_end = base.bbone_handle_type_end
+        target.bbone_custom_handle_end = base.bbone_custom_handle_end
+
+def transfer_bone_EDIT(composer, target, bone_name):
+    if target.data.edit_bones.get(bone_name):
+        targbone = target.data.edit_bones[bone_name]
+    else:
+        targbone = target.data.edit_bones.new(bone_name)
+    compbone = composer.data.edit_bones[bone_name]
+    map_bone_settings(targbone, compbone, True)
+
 def duplicate_bone_EDIT(armature, bone_name, set):
     copy_name = f"{set.name}{div}{bone_name.split(div)[-1]}"
     copy = armature.edit_bones.new(copy_name)
+    print(copy)
+    # if bone_name.split('.')[-1] == '.001':
+    #     copy.name.removesuffix('.002')
+    # else:
     copy.name.removesuffix('.001')
-    copy.head = armature.edit_bones[bone_name].head
-    copy.tail = armature.edit_bones[bone_name].tail
-    copy.matrix = armature.edit_bones[bone_name].matrix
+    map_bone_settings(copy, armature.edit_bones[bone_name], False)
     return copy
 
 def determine_parent_EDIT(armature, bone_name, set):
@@ -127,17 +192,15 @@ def add_trans_constraints(object, bone_name, set):
 
 def add_bone_function(object, bone_name):
 
-    # Note: Base is still selected and in edit mode so it also gets targeted. Oops.
     def add_ik_target_EDIT(object, ik, chain):
         bpy.ops.object.mode_set(mode='EDIT')
-        select_bones(False, object, 'EDIT')
+        select_bones(False, object, 'EDIT') # Deselected: All Bones 
         bones_EDIT = object.data.edit_bones
-        bones_EDIT[chain[0]].select_tail = True
+        bones_EDIT[chain[0]].select_tail = True # Selected: End bone
         bpy.ops.armature.extrude_move(TRANSFORM_OT_translate={
             "value":(0, 1, 0),
             "orient_type":'NORMAL',
-            "orient_matrix":((1, 0, 0), (0, 1, 0), (0, 0, 1))})
-        # assumes the newly created bone is selected
+            "orient_matrix":((1, 0, 0), (0, 1, 0), (0, 0, 1))}) # Selected: IK Bone | IK Bone, End Bone
         ik_bone_name = bpy.context.active_bone.name 
         bones_EDIT[ik_bone_name].use_connect = False
         bones_EDIT[ik_bone_name].parent = None # bones_EDIT[chain[-1]].parent
@@ -145,7 +208,9 @@ def add_bone_function(object, bone_name):
         bones_POSE = object.pose.bones
         ik.target = object
         ik.subtarget = bones_POSE[ik_bone_name].name
+        object.data.collections_all[dnd['master_set']].assign(bones_POSE[ik_bone_name])
         # This won't work if the constraint name isn't known...
+        select_bones(False, object, 'EDIT') # Deselected: All Bones
         
 
     bone = object.data.bones[bone_name]
@@ -156,10 +221,11 @@ def add_bone_function(object, bone_name):
         chain = get_bone_chain(object.data.bones[bone_name])
         ik = object.pose.bones[chain[0]].constraints.new('IK')
         ik.chain_count = len(chain)
-        add_ik_target_EDIT(object, ik, chain)
+        add_ik_target_EDIT(object, ik, chain) # Note: Renamed Sets need to be refreshed as the function breaks in the bone menu
+        chain[:] = []
 
 
-classes = [ARMATURE_OT_drig_make_composer, ARMATURE_OT_drig_compose]
+classes = [ARMATURE_OT_drig_make_composer, ARMATURE_OT_drig_finalise, ARMATURE_OT_drig_compose]
 
 def register():
     for cls in classes: bpy.utils.register_class(cls)

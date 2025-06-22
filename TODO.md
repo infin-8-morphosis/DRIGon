@@ -1,9 +1,22 @@
 __Drake-Rigger - Notes__
 
+June
+----------------------------------------------------------------------------------------------------
+    Finalise is functional but not suitable.
+        Need to make the target have its own armature data. Otherwise BASE gets deleted/edited!
+        Constraints not copied.
+        In general things not copied. Parenting, connection. etc.
+    
+    Tidied some bugs
+    Prepped for making the finalise operation
+
 May
 ----------------------------------------------------------------------------------------------------
     Added basic IK. Still needs a target.
     Prototyped adding target, non-functional currently.
+
+    Formalise the selection process
+        deselect the base once the composer is made
 
 
 2025

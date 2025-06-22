@@ -77,6 +77,27 @@ If you see the `Initialise` button, but have already initialised the selected ar
 it is likely missing necessary setup pieces.
 `Initialise` will attempt to find the missing pieces, or remake them if none are found.
 
+### Risks
+----------
+In theory, the only potentially damaging step of the process is the finalisation.
+Up until then all changes are purely to the **Composer**.
+All this really means is to make sure your animations are intact. If any of them are broken,
+finalisation was probably interrupted or went wrong. 
+
+In particular, renaming bones can interfere. Since the finalisation relies on overwriting bones,
+renamed bones won't pick up the data on the replaced bone, erasing animation data.
+(They don't have to be in the same place! Only the name is relevant, for now.)
+Unfortunately there isn't a great solution to this, except remembering to rename bones on BOTH
+armatures- the BASE and the RIG. You can do this at any time before finalisation.
+Potentially I could provide a warning for this, but you'd still have to hunt down the bones to rename yourself.
+
+Speaking of, please don't use the `divider` in names! You can change the divider used 
+(in theory) but whatever it is, will determine how the code works. Adding them yourself could
+make things not work correctly. For example, with the default divider of _ or underscore, you
+can name things Some.Thing, Some-Thing, but NOT Some_Thing.
+For style's sake, name your Composition Sets in ALL CAPS. It shouldn't break anything if you
+don't, but it keeps things consistent.
+
 ### Technical Details
 ----------------------
 

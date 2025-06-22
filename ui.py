@@ -56,6 +56,7 @@ class DATA_PT_drig_ui_main(bpy.types.Panel):
             else:                                               main = 'armature.drig_initialise'
             operations.operator(main)
             operations.operator('armature.drig_compose')
+            operations.operator('armature.drig_finalise')
             operations.operator('armature.drig_make_target')
             operations.operator('armature.drig_make_composer')
         
