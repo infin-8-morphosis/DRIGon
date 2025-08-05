@@ -1,14 +1,53 @@
 __Drake-Rigger - Notes__
 
+Accessing drivers / determining driver location:
+C.object.animation_data.drivers[0].data_path
+'pose.bones["Bone"].location'
+
 June
 ----------------------------------------------------------------------------------------------------
-    Finalise is functional but not suitable.
-        Need to make the target have its own armature data. Otherwise BASE gets deleted/edited!
-        Constraints not copied.
-        In general things not copied. Parenting, connection. etc.
+TODO: Essential
+    Components
+        boneproperty to set component
+        bpy.ops.object.join() #set active to main object
+        in edit mode:
+            set componented bone's parent to the (saved) equiv parent of the object.
+            option to connect them?
+        flip L/R Vertex groups names option (allowing us to mirror limbs) 
+        idea: Use an inactive constraint to save the rot loc and scale of a component for decomposing.
+            bpy.ops.armature.separate()
     
-    Tidied some bugs
-    Prepped for making the finalise operation
+    Decomposer
+        for set in dnd["master_set"].children_recursive:
+            for bone in set:
+                for constraint in bone.constraint:
+                    base.bone[bone.name].select = True
+                    constraint.copy_to_selected()
+                    base.bone[bone.name].constraint[constraint].name = set.name + constraint.name
+                    base.bone[bonename].constraint.enabled = False
+                    # also do drivers in some way. cant have multiple on one bone tho
+                    base.bone[bone.name].select = False
+
+        for bone in dnd["base_set"]:
+            transfer_bone(rig[bone.name], base[bone.name])
+
+
+TODO: Nice To Have
+    Add a Settings tab where you can set what collection IK Controls and such are added to.
+    Bone Subdivider function.
+        Choose subdiv length
+        Run subdiv w/ length
+        Assuming the initial bone is the base, go along the chain and rename.
+    As bone functions get more specific, probably a good idea to have the UI change based on the
+    selected function.
+    
+Finalise is functional but not suitable.
+    ~~Need to make the target have its own armature data. Otherwise BASE gets deleted/edited!~~
+    ~~Constraints not copied.~~
+    ~~In general things not copied. Parenting, connection. etc.~~
+    
+Tidied some bugs
+Prepped for making the finalise operation
 
 May
 ----------------------------------------------------------------------------------------------------
@@ -29,7 +68,7 @@ May
 
 Make the constraints target a different bone group
 Alter the constraints target
-Add deform
+~~Add deform~~
 
 Add a simple compose button that runs the compose set operator on each set.
 

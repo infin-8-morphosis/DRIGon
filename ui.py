@@ -52,13 +52,10 @@ class DATA_PT_drig_ui_main(bpy.types.Panel):
                 elif    fate == 'NEW_TARGET_COMPOSE':           main = 'armature.drig_compose'
                 else:                                           main = 'armature.drig_initialise'
             elif fate == 'COMPOSE':                             main = 'armature.drig_compose'
+            elif fate == 'FINALISE':                            main = 'armature.drig_finalise'
             elif fate == 'DECOMPOSE' or fate == 'INCOMPATIBLE': main = 'mesh.primitive_cube_add'
             else:                                               main = 'armature.drig_initialise'
             operations.operator(main)
-            operations.operator('armature.drig_compose')
-            operations.operator('armature.drig_finalise')
-            operations.operator('armature.drig_make_target')
-            operations.operator('armature.drig_make_composer')
         
         def determine_alerts():
             if not object.get('drig_rigify_compatibility') and armature.get("rig_id"):

@@ -47,14 +47,16 @@ bpy.types.BoneCollection.drig_set_deform = bpy.props.BoolProperty()
 function_types = [("NONE", "None", ""),
                    ("IK_BASIC", "Basic IK", ""),
                    ("IK_POLES", "Poled IK", ""),
-                   ("CHAIN", "Chain", "Apply a chain of inherited rotations.")]
+                   ("CHAIN", "Chain", "Apply a chain of inherited rotations")]
 bpy.types.Bone.drig_function_type = bpy.props.EnumProperty(
     items=function_types,
-    description="Add functionality to a chain of bones.")
+    description="Add functionality to a chain of bones")
 bpy.types.Bone.drig_function_set = bpy.props.StringProperty()
 
 bpy.types.Bone.drig_component_target = bpy.props.PointerProperty(type=bpy.types.Object)
 bpy.types.Bone.drig_component_set = bpy.props.StringProperty()
+bpy.types.Bone.drig_component_connected = bpy.props.BoolProperty(
+    description="Connects the bone at the origin point to the overlapping bone in the main armature, if one is present")
 #---------------------------------------------------------------------------------------------------
 
 classes = []

@@ -57,6 +57,33 @@ class ARMATURE_OT_drig_compose(bpy.types.Operator):
 
         return {'FINISHED'}
 
+# UNTESTED
+class ARMATURE_OT_drig_join_component(bpy.types.Operator):
+    bl_idname = "armature.drig_join_component"
+    bl_label = "Join Component"
+    bl_options = {'REGISTER', 'UNDO'}
+    
+    def execute(self,context):
+        composer = context.object # Selection: Composer
+        base_bone = context.active_pose_bone
+        base = composer.drig_base
+        component = base_bone.drig_component_target
+
+        # Important: When decomposing you'll have to reverse these
+        # transforms, apply them, then add them back
+        transform = base_bone.constraints.new('TRANSFORM')
+        transform.mute = True
+        transform.from_min_x = component.location.x
+        transform.from_min_y = component.location.y
+        transform.from_min_z = component.location.z
+        transform.from_min_x_rot = component.rotation_euler.x
+        transform.from_min_y_rot = component.rotation_euler.y
+        transform.from_min_z_rot = component.rotation_euler.z
+        transform.from_min_x_scale = component.scale.x
+        transform.from_min_y_scale = component.scale.y
+        transform.from_min_z_scale = component.scale.z
+        
+
 class ARMATURE_OT_drig_finalise(bpy.types.Operator):
     bl_idname = "armature.drig_finalise"
     bl_label = "Finalise Composition"
@@ -85,6 +112,7 @@ class ARMATURE_OT_drig_finalise(bpy.types.Operator):
 
         # copy bones from composer to target in ONE edit mode
         return {'FINISHED'}
+
 
 # Copies base, adds new armature, removes all bones from bone groups, except COMPOSITION_SETS.
 class ARMATURE_OT_drig_make_composer(bpy.types.Operator):
