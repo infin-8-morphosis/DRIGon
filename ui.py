@@ -50,6 +50,7 @@ class DATA_PT_drig_ui_main(bpy.types.Panel):
                 if      fate == 'PREPARE_BASE':                 main = 'armature.drig_prepare_base'
                 elif    fate == 'PREPARE_RIGIFY_COMPATIBILITY': main = 'mesh.primitive_cube_add'
                 elif    fate == 'NEW_TARGET_COMPOSE':           main = 'armature.drig_compose'
+                elif    fate == 'FINALISE':                     main = 'armature.drig_finalise'
                 else:                                           main = 'armature.drig_initialise'
             elif fate == 'COMPOSE':                             main = 'armature.drig_compose'
             elif fate == 'FINALISE':                            main = 'armature.drig_finalise'

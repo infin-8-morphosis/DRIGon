@@ -96,7 +96,14 @@ Speaking of, please don't use the `divider` in names! You can change the divider
 make things not work correctly. For example, with the default divider of _ or underscore, you
 can name things Some.Thing, Some-Thing, but NOT Some_Thing.
 For style's sake, name your Composition Sets in ALL CAPS. It shouldn't break anything if you
-don't, but it keeps things consistent.
+don't, but it keeps things consistent and easy to tell apart from bone collections proper.
+
+### Troubleshooting
+----------------------
+If using components, make sure the component's origin is at the point to you want it to attach.
+It doesn't need to be parented to the base, though that shouldn't break anything either.
+It's also possible components will desync if the base isn't at world origin. That's a bug
+if it does, but... I'll sort that eventually.
 
 ### Technical Details
 ----------------------

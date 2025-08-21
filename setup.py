@@ -112,7 +112,7 @@ class ARMATURE_OT_drig_make_target(bpy.types.Operator):
         target.data = bpy.context.object.data.copy()
         target.data.name = f"{dnd['armature']}{div}{split_name(context.object,1)}{div}{split_name(context.object.data,-1)}"
         context.object.drig_target_main = target
-        context.object.drig_fate = 'COMPOSE'
+        context.object.drig_fate = 'FINALISE'
         target.drig_target_main = target
         target.drig_base = context.object
 

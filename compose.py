@@ -1,4 +1,4 @@
-import bpy #type:ignore
+import bpy, mathutils #type:ignore
 from .common import split_name, list_names, copy_armature, get_bone_chain, select_bones
 from .common import dnd, div, keep_composer
 
@@ -17,7 +17,6 @@ class ARMATURE_OT_drig_compose(bpy.types.Operator):
             dupename = dupe.name
             bpy.ops.object.mode_set(mode='OBJECT')
             g = composer.data.bones.get(dupename)
-            print(g)
             set.assign(composer.data.bones[dupename])
             if set.drig_trans_type != 'NONE':
                 add_trans_constraints(composer, dupename, set)
@@ -42,6 +41,7 @@ class ARMATURE_OT_drig_compose(bpy.types.Operator):
         base = context.object.drig_base
         base.select_set(False) #Deselected: Base | Selection: Composer
         comp_set = composer.data.collections_all[dnd['master_set']]
+
         if not composer.data.collections_all.get(dnd['base_set']):
             base_set = composer.data.collections.new(dnd['base_set'],parent=comp_set)
         for bone in comp_set.bones_recursive:
@@ -52,13 +52,18 @@ class ARMATURE_OT_drig_compose(bpy.types.Operator):
             compose_set(composer, set)
         for bone in base_set.bones:
             if bone.drig_function_type != 'NONE':
-                add_bone_function(composer, bone.name)
+                add_drig_function(composer, bone.name)
+            # if bone.drig_component_target:
+            #     join_drig_component(context, composer, bone.name)
         bpy.ops.object.mode_set(mode='OBJECT')
+
+        composer.drig_fate = 'FINALISE'
 
         return {'FINISHED'}
 
+
 # UNTESTED
-class ARMATURE_OT_drig_join_component(bpy.types.Operator):
+class ARMATURE_OT_drig_decompose_component(bpy.types.Operator):
     bl_idname = "armature.drig_join_component"
     bl_label = "Join Component"
     bl_options = {'REGISTER', 'UNDO'}
@@ -67,21 +72,47 @@ class ARMATURE_OT_drig_join_component(bpy.types.Operator):
         composer = context.object # Selection: Composer
         base_bone = context.active_pose_bone
         base = composer.drig_base
-        component = base_bone.drig_component_target
+        component = base_bone.bone.drig_component_target
 
-        # Important: When decomposing you'll have to reverse these
-        # transforms, apply them, then add them back
-        transform = base_bone.constraints.new('TRANSFORM')
-        transform.mute = True
-        transform.from_min_x = component.location.x
-        transform.from_min_y = component.location.y
-        transform.from_min_z = component.location.z
-        transform.from_min_x_rot = component.rotation_euler.x
-        transform.from_min_y_rot = component.rotation_euler.y
-        transform.from_min_z_rot = component.rotation_euler.z
-        transform.from_min_x_scale = component.scale.x
-        transform.from_min_y_scale = component.scale.y
-        transform.from_min_z_scale = component.scale.z
+        bpy.ops.armature.separate()
+
+        return {'FINISHED'}
+
+
+# # UNTESTED
+# class ARMATURE_OT_drig_join_component(bpy.types.Operator):
+#     bl_idname = "armature.drig_join_component"
+#     bl_label = "Join Component"
+#     bl_options = {'REGISTER', 'UNDO'}
+    
+#     def execute(self,context):
+#         composer = context.object # Selection: Composer
+#         base_bone = context.active_pose_bone
+#         base = composer.drig_base
+#         component = base_bone.bone.drig_component_target
+#         # Assume the necessary armatures are pre-selected for now...?
+#         bpy.ops.object,join()
+
+#         # Important: When decomposing you'll have to reverse these
+#         # transforms, apply them, then add them back
+#         def save_transform():
+#             transform = base_bone.constraints.new('TRANSFORM')
+#             transform.mute = True
+#             transform.from_min_x = component.location.x
+#             transform.from_min_y = component.location.y
+#             transform.from_min_z = component.location.z
+#             transform.from_min_x_rot = component.rotation_euler.x
+#             transform.from_min_y_rot = component.rotation_euler.y
+#             transform.from_min_z_rot = component.rotation_euler.z
+#             transform.from_min_x_scale = component.scale.x
+#             transform.from_min_y_scale = component.scale.y
+#             transform.from_min_z_scale = component.scale.z
+            
+#         bpy.ops.object.mode_set(mode='POSE')
+#         save_transform()
+#         bpy.ops.object.mode_set(mode='OBJECT')
+        
+#         return {'FINISHED'}
         
 
 class ARMATURE_OT_drig_finalise(bpy.types.Operator):
@@ -106,7 +137,6 @@ class ARMATURE_OT_drig_finalise(bpy.types.Operator):
         bpy.ops.object.mode_set(mode='EDIT')
         for bone in composer.data.bones:
             transfer_bone_EDIT(composer, target, bone.name)
-            print(bone.name)
         # for bone in composer
         # make new bone with matching matrix
 
@@ -121,6 +151,26 @@ class ARMATURE_OT_drig_make_composer(bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}
     
     def execute(self,context):
+
+        def save_transform(object, bone_name, component):
+            transform = object.pose.bones[bone_name].constraints.new('TRANSFORM')
+            transform.name = f"COMPONENT{div}{component.name}"
+            transform.mute = True
+            transform.from_min_x = component.location.x
+            transform.from_min_y = component.location.y
+            transform.from_min_z = component.location.z
+            transform.from_min_x_rot = component.rotation_euler.x
+            transform.from_min_y_rot = component.rotation_euler.y
+            transform.from_min_z_rot = component.rotation_euler.z
+            transform.from_min_x_scale = component.scale.x
+            transform.from_min_y_scale = component.scale.y
+            transform.from_min_z_scale = component.scale.z
+            transform = mathutils.Vector((round(transform.from_min_x, 2),
+                                          round(transform.from_min_y, 2),
+                                          round(transform.from_min_z, 2)))
+            print(transform)
+
+            return transform
         
         # Selection: Base
         base = context.object.drig_base 
@@ -131,10 +181,37 @@ class ARMATURE_OT_drig_make_composer(bpy.types.Operator):
         bd = base.data
         cd.name = f"{dnd['composer']}{div}{split_name(composer,1)}{div}{split_name(bd,-1)}"
 
-        for bone in composer.data.collections_all[dnd['master_set']].bones_recursive: 
+        bpy.data.objects[base.name].select_set(False)
+        component_list = []
+        for bone in base.data.collections_all[dnd['master_set']].bones_recursive:
+            if bone.drig_component_target:
+                component_list.append(bone.name)
+
+        for name in component_list:
+                bone = base.data.bones[name]
+                bpy.data.objects[bone.drig_component_target.name].select_set(False)
+                component = bone.drig_component_target.copy()
+                component.data = bone.drig_component_target.data.copy()
+                context.collection.objects.link(component)
+                transform = save_transform(composer, bone.name, component)
+                bpy.ops.object.mode_set(mode='OBJECT')
+                bpy.data.objects[component.name].select_set(True)
+                context.view_layer.objects.active = composer
+                bpy.ops.object.join()
+
+        for name in component_list:
+            # use the transform to join the component base to the component parent bone.
+            for each in composer.data.collections_all[dnd['master_set']].bones_recursive:
+                if each.head_local == transform: # TODO: Minus component transform so this works outside 0,0,0
+                    bpy.ops.object.mode_set(mode='EDIT')
+                    composer.data.edit_bones[each.name].parent = composer.data.edit_bones[name]
+                    composer.data.edit_bones[each.name].use_connect = True # Not always wanted!
+                    bpy.ops.object.mode_set(mode='OBJECT')
+                    break
+        
+        for bone in composer.data.collections_all[dnd['master_set']].bones_recursive:
             bone.name = f"{dnd['base']}{div}{bone.name}"
             bone.use_deform = False
-        
 
         return {'FINISHED'}
 
@@ -173,7 +250,6 @@ def transfer_bone_EDIT(composer, target, bone_name):
 def duplicate_bone_EDIT(armature, bone_name, set):
     copy_name = f"{set.name}{div}{bone_name.split(div)[-1]}"
     copy = armature.edit_bones.new(copy_name)
-    print(copy)
     # if bone_name.split('.')[-1] == '.001':
     #     copy.name.removesuffix('.002')
     # else:
@@ -218,7 +294,7 @@ def add_trans_constraints(object, bone_name, set):
         constraint.subtarget = f"{set.parent.name}{div}{bone_name.split(div)[-1]}"
     #alter constraint settings here
 
-def add_bone_function(object, bone_name):
+def add_drig_function(object, bone_name):
 
     def add_ik_target_EDIT(object, ik, chain):
         bpy.ops.object.mode_set(mode='EDIT')
@@ -252,8 +328,25 @@ def add_bone_function(object, bone_name):
         add_ik_target_EDIT(object, ik, chain) # Note: Renamed Sets need to be refreshed as the function breaks in the bone menu
         chain[:] = []
 
+# def join_drig_component(context, object, bone_name):
+#     bone = object.data.bones[bone_name]
+#     base_bone = context.active_pose_bone
+#     base = object.drig_base
+#     component = base_bone.bone.drig_component_target
+#     # Assume the necessary armatures are pre-selected for now...?
+#     bpy.ops.object.join()
 
-classes = [ARMATURE_OT_drig_make_composer, ARMATURE_OT_drig_finalise, ARMATURE_OT_drig_compose]
+#     # Important: When decomposing you'll have to reverse these
+#     # transforms, apply them, then add them back
+        
+#     bpy.ops.object.mode_set(mode='POSE')
+#     save_transform(component)
+#     bpy.ops.object.mode_set(mode='OBJECT')
+
+
+classes = [ARMATURE_OT_drig_make_composer,
+           ARMATURE_OT_drig_finalise, 
+           ARMATURE_OT_drig_compose]
 
 def register():
     for cls in classes: bpy.utils.register_class(cls)
