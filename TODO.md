@@ -1,5 +1,30 @@
 __Drake-Rigger - Notes__
 
+What Has Been Done:
+    Automatic IK
+    Automatically compose set bones
+    Create Composer
+    Finalise?
+
+What Has Not Been Done:
+    Rigify Integration
+    Decomposition
+
+
+Add tool for mass-renaming Vertex Groups
+
+For decomp: Check what bones have deform on. If yes, check deform on the base set bones.
+could completely reverse engineer the set assignments based on what bones are present. Would that even be useful?
+
+Decomp
+    Make Decomposer by duping RIG
+    Delete everything except BASE
+    Reference RIG to ensure the duping process isnt relied on
+    Copy drivers to BASE, can you give drivers names using python...?
+        I guess use a var name to store the set / bone name. 
+        Var name for set, with data store specific bone. If none, assume same bone?
+
+
 Accessing drivers / determining driver location:
 C.object.animation_data.drivers[0].data_path
 'pose.bones["Bone"].location'

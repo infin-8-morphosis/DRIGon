@@ -225,11 +225,31 @@ class DATA_PT_drig_ui_info(bpy.types.Panel):
         column = layout.column()
 
 
+class DATA_PT_drig_tools(bpy.types.Panel):
+    bl_space_type = 'PROPERTIES'
+    bl_region_type = 'WINDOW'
+    bl_context = "data"
+    bl_label = "Tools"
+    
+    @classmethod
+    def poll(cls, context):
+        return True
+
+    def draw(self, context):
+        layout = self.layout
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+
+        operations = layout.column()
+        operations.operator('mesh.primitive_cube_add')
+
+
 classes = [BONE_PT_drig_ui_bones,
            DATA_PT_drig_ui_main,
            DATA_PT_drig_ui_rig_structure,
            DATA_PT_drig_ui_morphs, 
-           DATA_PT_drig_ui_info]
+           DATA_PT_drig_ui_info,
+           DATA_PT_drig_tools]
 
 def register():
     for cls in classes: bpy.utils.register_class(cls)
