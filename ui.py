@@ -241,7 +241,7 @@ class DATA_PT_drig_tools(bpy.types.Panel):
         layout.use_property_decorate = False
 
         operations = layout.column()
-        operations.operator('mesh.primitive_cube_add')
+        operations.operator('armature.drig_tools_apply_pose')
 
 
 classes = [BONE_PT_drig_ui_bones,

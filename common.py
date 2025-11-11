@@ -33,21 +33,6 @@ def list_names(item_list):
     return name_list
 
 
-def apply_pose(): #Currently assumes object is active. Heavily reliant on ops!
-	#Object
-	bpy.ops.object.modifier_copy(modifier="Armature")
-	bpy.context.object.modifiers["Armature.001"].show_viewport = False
-	bpy.ops.object.modifier_apply(modifier="Armature.001")
-
-	armature = bpy.data.objects["Cube"].modifiers["Armature"].object
-	armature.select_set(True)
-	bpy.context.view_layer.objects.active = armature
-
-	#Armature
-	bpy.ops.object.posemode_toggle()
-	bpy.ops.pose.armature_apply(selected=False)
-
-
 def get_bone_chain(chain_base,list = []):
 	if not chain_base.children:
 		list.append(chain_base.name)

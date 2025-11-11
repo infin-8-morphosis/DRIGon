@@ -1,7 +1,7 @@
 import bpy #type:ignore
 
 from . import propmanager, common, setup
-from . import compose#, decompose#, process
+from . import compose, tools#, decompose#, process
 from . import ui
 # order may be important. ie dont import if havent imported a files dependencies
 
@@ -21,6 +21,7 @@ def register():
     common.register()
     setup.register()
     compose.register()
+    tools.register()
     #decompose.register()
     #process.register()
     ui.register()
@@ -30,6 +31,7 @@ def unregister():
     ui.unregister()
     #process.unregister()
     #decompose.unregister()
+    tools.unregister()
     compose.unregister()
     setup.unregister()
     common.unregister()
