@@ -9,6 +9,7 @@ What Has Been Done:
 What Has Not Been Done:
     Rigify Integration
     Decomposition
+    Add sync / rename description to property tooltips
 
 
 Add tool for mass-renaming Vertex Groups
