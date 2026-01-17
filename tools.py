@@ -55,7 +55,7 @@ class ARMATURE_OT_drig_tools_rename_vertex_groups(bpy.types.Operator):
         #         v_groups[n[0]].name = n[1]
         return {'FINISHED'}
 
-# fucking around here.
+# fucking around here. Did this break...? I swear it worked somewhat.
 def render_panel(self, context):
 
     main = self.layout.column()
@@ -65,7 +65,6 @@ def render_panel(self, context):
     sub1.operator("object.vertex_group_add", icon='ZOOM_ALL', text="")
     sub2 = main.row()
     sub2.prop(context.scene,'sync_bone_names',text="Sync Bones")
-    
     
 
 classes = [ARMATURE_OT_drig_tools_apply_pose]

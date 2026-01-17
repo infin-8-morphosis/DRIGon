@@ -2,6 +2,7 @@ import bpy #type:ignore
 from bpy.types import (Panel, Operator, Armature) #type:ignore
 from .common import split_name, dnd, div
 
+
 class BONE_PT_drig_ui_bones(bpy.types.Panel):
     bl_label = "Drigon"
     bl_space_type = 'PROPERTIES'
@@ -28,6 +29,7 @@ class BONE_PT_drig_ui_bones(bpy.types.Panel):
         comp_area.label(text="Component", icon = "INFO")
         comp_area.prop(bone,'drig_component_target', text="", placeholder="Target")
         comp_area.prop_search(bone, 'drig_component_set', armature, "collections_all", text="")
+
 
 class DATA_PT_drig_ui_main(bpy.types.Panel):
     bl_label = "Drigon 0.2"
@@ -90,6 +92,7 @@ class DATA_PT_drig_ui_main(bpy.types.Panel):
                 base.enabled = False
             if object == object.drig_target_main:
                 target.enabled = False
+
 
 class DATA_PT_drig_ui_rig_structure(bpy.types.Panel):
     bl_space_type = 'PROPERTIES'

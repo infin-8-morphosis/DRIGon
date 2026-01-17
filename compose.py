@@ -34,7 +34,11 @@ class ARMATURE_OT_drig_compose(bpy.types.Operator):
                     compose_set(composer, child)
 
         # Selection: Base
-        bpy.ops.armature.drig_make_composer()
+        bpy.ops.armature.drig_make_composer() 
+        # Components are joined here... why?
+        # I guess all bones need to be merged first. Cant we break it down?
+        # Mmm yeah good to exit with a single model... sounds jank still
+        # Shouldnt Make_Composer be part of this operation?
         composer = bpy.data.objects[f"{dnd['composer']}{div}{split_name(context.object,1)}"]
         composer.select_set(True) # Selected: Composer | Selection: Composer, Base
         context.view_layer.objects.active = composer
@@ -151,10 +155,12 @@ class ARMATURE_OT_drig_make_composer(bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}
     
     def execute(self,context):
-
+        # Uses a constraint to save the orientation of the component
+        # To be used later when decomposing back to separate pieces
         def save_transform(object, bone_name, component):
             transform = object.pose.bones[bone_name].constraints.new('TRANSFORM')
             transform.name = f"COMPONENT{div}{component.name}"
+            print(transform.name, component.name)
             transform.mute = True
             transform.from_min_x = component.location.x
             transform.from_min_y = component.location.y
@@ -168,10 +174,34 @@ class ARMATURE_OT_drig_make_composer(bpy.types.Operator):
             transform = mathutils.Vector((round(transform.from_min_x, 2),
                                           round(transform.from_min_y, 2),
                                           round(transform.from_min_z, 2)))
-            print(transform)
 
             return transform
         
+        def merge_component(base, component_list):
+            for name in component_list: 
+            #This is where components are merged... 
+            #Shouldnt this be a function?
+                bone = base.data.bones[name]
+                bpy.data.objects[bone.drig_component_target.name].select_set(False)
+                component = bone.drig_component_target.copy()
+                component.data = bone.drig_component_target.data.copy()
+                context.collection.objects.link(component)
+                transform = save_transform(composer, bone.name, component)
+                bpy.ops.object.mode_set(mode='OBJECT')
+                bpy.data.objects[component.name].select_set(True)
+                context.view_layer.objects.active = composer
+                bpy.ops.object.join()
+
+            for name in component_list:
+            # use the transform to join the component base to the component parent bone.
+                for each in composer.data.collections_all[dnd['master_set']].bones_recursive:
+                    if each.head_local == transform: # TODO: Minus component transform so this works outside 0,0,0
+                        bpy.ops.object.mode_set(mode='EDIT')
+                        composer.data.edit_bones[each.name].parent = composer.data.edit_bones[name]
+                        composer.data.edit_bones[each.name].use_connect = True # Not always wanted!
+                        bpy.ops.object.mode_set(mode='OBJECT')
+                        break
+
         # Selection: Base
         base = context.object.drig_base 
         composer = copy_armature(base, dnd['composer'], 'FINALISE', keep_composer)
@@ -186,29 +216,9 @@ class ARMATURE_OT_drig_make_composer(bpy.types.Operator):
         for bone in base.data.collections_all[dnd['master_set']].bones_recursive:
             if bone.drig_component_target:
                 component_list.append(bone.name)
-
-        for name in component_list:
-                bone = base.data.bones[name]
-                bpy.data.objects[bone.drig_component_target.name].select_set(False)
-                component = bone.drig_component_target.copy()
-                component.data = bone.drig_component_target.data.copy()
-                context.collection.objects.link(component)
-                transform = save_transform(composer, bone.name, component)
-                bpy.ops.object.mode_set(mode='OBJECT')
-                bpy.data.objects[component.name].select_set(True)
-                context.view_layer.objects.active = composer
-                bpy.ops.object.join()
-
-        for name in component_list:
-            # use the transform to join the component base to the component parent bone.
-            for each in composer.data.collections_all[dnd['master_set']].bones_recursive:
-                if each.head_local == transform: # TODO: Minus component transform so this works outside 0,0,0
-                    bpy.ops.object.mode_set(mode='EDIT')
-                    composer.data.edit_bones[each.name].parent = composer.data.edit_bones[name]
-                    composer.data.edit_bones[each.name].use_connect = True # Not always wanted!
-                    bpy.ops.object.mode_set(mode='OBJECT')
-                    break
         
+        merge_component(base, component_list)
+
         for bone in composer.data.collections_all[dnd['master_set']].bones_recursive:
             bone.name = f"{dnd['base']}{div}{bone.name}"
             bone.use_deform = False
