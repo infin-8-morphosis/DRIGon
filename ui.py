@@ -56,7 +56,7 @@ class DATA_PT_drig_ui_main(bpy.types.Panel):
                 else:                                           main = 'armature.drig_initialise'
             elif fate == 'COMPOSE':                             main = 'armature.drig_compose'
             elif fate == 'FINALISE':                            main = 'armature.drig_finalise'
-            elif fate == 'DECOMPOSE' or fate == 'INCOMPATIBLE': main = 'mesh.primitive_cube_add'
+            elif fate == 'DECOMPOSE' or fate == 'INCOMPATIBLE': main = 'armature.drig_decompose'
             else:                                               main = 'armature.drig_initialise'
             operations.operator(main)
         

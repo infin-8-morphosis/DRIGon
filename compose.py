@@ -136,58 +136,85 @@ class ARMATURE_OT_drig_compose(bpy.types.Operator):
         return {'FINISHED'}
 
 
-# UNTESTED
-class ARMATURE_OT_drig_decompose_component(bpy.types.Operator):
-    bl_idname = "armature.drig_join_component"
-    bl_label = "Join Component"
+# TODO:
+# In theory this will all be in reverse, right?
+# For now, assume BASE is still in sync. In future it should be able to be reconstructed
+# That should be step one actually
+# No. You need to make a DECOMPOSER also even firstier
+            # DONE / UNNECESSARY
+            # 1. Make DECOMPOSER
+                # Basically just a copy of RIG
+            # 2. Reconstruct BASE
+                # Ignore IK bones. Go through bones, add unique names without IK to a list
+                # Remove any repeats. See if any of the bone groups only contains bones with those names...?
+                # I'll be honest maybe BASE should just be kept... 
+# 3. IK / Functions
+    # Go through all bones for IK's and get_parent until you locate a matching function.
+    # Copy the IK to the function bone and deactivate it / name it appropriately.
+    # If there is no funcbone, either leave it or assume the closest unconnected parent is 
+    # where it should go.
+# 4. Constraints
+    # Add them to BASE, idk more details
+# 4. Decompose Sets
+    # Lets assume we're rebuilding COMPOSITION_SETS.
+    # Cycle through all bones, have a list of prefixes
+    # make comp sets, add sets, assign equiv BASE bones to the sets.
+# 5. I think that's it?
+# Should make some kind of comparer to check if the BASE is actually identical to itself unedited
+class ARMATURE_OT_drig_decompose(bpy.types.Operator):
+    bl_idname = "armature.drig_decompose"
+    bl_label = "Decompose to Base"
     bl_options = {'REGISTER', 'UNDO'}
     
     def execute(self,context):
-        composer = context.object # Selection: Composer
-        base_bone = context.active_pose_bone
-        base = composer.drig_base
-        component = base_bone.bone.drig_component_target
+        rig = context.object # Selection: RIG
+        decomposer = copy_armature(rig, dnd['decomposer'], 'FINALISE', keep_composer)
+        decomposer.data = rig.data.copy()
 
-        bpy.ops.armature.separate()
+        def remove_IK_bones_EDIT():
+            chopping_block = []
+            for bone in decomposer.data.edit_bones:
+                print(split_name(bone, 0))
+                if split_name(bone, 0) == dnd['ik']:
+                    chopping_block.append(bone)
+            for bone in chopping_block:
+                    decomposer.data.edit_bones.remove(bone)
+
+        # THE BELOW is stupid but works... We got the function bone yes but that's always
+        # BASE lol... So we actually have to:
+            # Get the equivalent IK bone
+            # Trace its chain
+            # See if it has a constraint
+            # Copy that constraint back to the BASE bone.
+            # (At some point composition will have to compose from said constraint if present)
+
+        # store all bones with functions in their properties
+        # remove them if processed?
+        functional_list = []
+        for bone in decomposer.data.bones:
+            if bone.drig_function_type != 'NONE':
+                functional_list.append(bone)
+                print("Found something!")
+        
+        for bone in functional_list:
+            chain = []
+            chainbase = get_bone_chain(bone, chain)[0]
+            if decomposer.data.bones[chainbase].drig_function_type:
+                print(decomposer.data.bones[chainbase])
+                #copy the constraint to equiv BASE, if one is already present overwrite it
+                pass
+            else:
+                # implement wierd chains here if needed
+                pass
+
+
+        bpy.ops.object.mode_set(mode='EDIT')
+        remove_IK_bones_EDIT() # Do this after finding the IK constraints lol
+        bpy.ops.object.mode_set(mode='OBJECT')
+        #bpy.ops.armature.separate()
 
         return {'FINISHED'}
 
-
-# # UNTESTED
-# class ARMATURE_OT_drig_join_component(bpy.types.Operator):
-#     bl_idname = "armature.drig_join_component"
-#     bl_label = "Join Component"
-#     bl_options = {'REGISTER', 'UNDO'}
-    
-#     def execute(self,context):
-#         composer = context.object # Selection: Composer
-#         base_bone = context.active_pose_bone
-#         base = composer.drig_base
-#         component = base_bone.bone.drig_component_target
-#         # Assume the necessary armatures are pre-selected for now...?
-#         bpy.ops.object,join()
-
-#         # Important: When decomposing you'll have to reverse these
-#         # transforms, apply them, then add them back
-#         def save_transform():
-#             transform = base_bone.constraints.new('TRANSFORM')
-#             transform.mute = True
-#             transform.from_min_x = component.location.x
-#             transform.from_min_y = component.location.y
-#             transform.from_min_z = component.location.z
-#             transform.from_min_x_rot = component.rotation_euler.x
-#             transform.from_min_y_rot = component.rotation_euler.y
-#             transform.from_min_z_rot = component.rotation_euler.z
-#             transform.from_min_x_scale = component.scale.x
-#             transform.from_min_y_scale = component.scale.y
-#             transform.from_min_z_scale = component.scale.z
-            
-#         bpy.ops.object.mode_set(mode='POSE')
-#         save_transform()
-#         bpy.ops.object.mode_set(mode='OBJECT')
-        
-#         return {'FINISHED'}
-        
 
 class ARMATURE_OT_drig_finalise(bpy.types.Operator):
     bl_idname = "armature.drig_finalise"
@@ -317,7 +344,6 @@ def add_drig_function(object, bone_name):
         object.data.collections_all[dnd['master_set']].assign(bones_POSE[ik_bone_name])
         # This won't work if the constraint name isn't known...
         select_bones(False, object, 'EDIT') # Deselected: All Bones
-        
 
     bone = object.data.bones[bone_name]
     set = object.data.collections_all.get(bone.drig_function_set)
@@ -330,24 +356,10 @@ def add_drig_function(object, bone_name):
         add_ik_target_EDIT(object, ik, chain) # Note: Renamed Sets need to be refreshed as the function breaks in the bone menu
         chain[:] = []
 
-# def join_drig_component(context, object, bone_name):
-#     bone = object.data.bones[bone_name]
-#     base_bone = context.active_pose_bone
-#     base = object.drig_base
-#     component = base_bone.bone.drig_component_target
-#     # Assume the necessary armatures are pre-selected for now...?
-#     bpy.ops.object.join()
-
-#     # Important: When decomposing you'll have to reverse these
-#     # transforms, apply them, then add them back
-        
-#     bpy.ops.object.mode_set(mode='POSE')
-#     save_transform(component)
-#     bpy.ops.object.mode_set(mode='OBJECT')
-
 
 classes = [ARMATURE_OT_drig_finalise, 
-           ARMATURE_OT_drig_compose]
+           ARMATURE_OT_drig_compose,
+           ARMATURE_OT_drig_decompose]
 
 def register():
     for cls in classes: bpy.utils.register_class(cls)

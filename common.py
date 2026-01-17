@@ -5,6 +5,7 @@ keep_composer = True
 drig_naming_dict = {
                 'divider' : '_',
                 'composer' : 'COMPOSER',
+				'decomposer': 'DECOMPOSER',
                 'base' : 'BASE',
                 'target' : 'RIG',
                 'armature' : 'ARMATURE',
@@ -33,6 +34,7 @@ def list_names(item_list):
     return name_list
 
 
+# Doesnt this assume a single child? How does this process children...?
 def get_bone_chain(chain_base,list = []):
 	if not chain_base.children:
 		list.append(chain_base.name)
