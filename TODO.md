@@ -146,7 +146,7 @@ Rig Generation
         BASE - Used to make morphs/decompose. 
 
         Able to do away with the many copying constraints? 
-        Parent them all to their PROX?
+        Parent them all to their PROX? 
 
 Code Structure
 ----------------------------------------------------------------------------------------------------
