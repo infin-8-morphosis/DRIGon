@@ -1,5 +1,7 @@
 __Drake-Rigger - Notes__
 
+Add `assert`s? Perhaps instead of our selection comments?
+
 What we need is some debug tools to test various operations without actually integrating
 them into the UI
 Maybe also make a folder for various test rigs?
