@@ -1,5 +1,10 @@
 __Drake-Rigger - Notes__
 
+What we need is some debug tools to test various operations without actually integrating
+them into the UI
+Maybe also make a folder for various test rigs?
+Need better documentation...
+
 What Has Been Done:
     Automatic IK
     Automatically compose set bones
