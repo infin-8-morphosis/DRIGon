@@ -4,6 +4,8 @@ keep_composer = True
 
 drig_naming_dict = {
                 'divider' : '_',
+				'bracket_left' : '[',
+				'bracket_right' : ']',
                 'composer' : 'COMPOSER',
 				'decomposer': 'DECOMPOSER',
                 'base' : 'BASE',
@@ -20,6 +22,8 @@ drig_naming_dict = {
 				'base_set' : 'BASE'}
 dnd = drig_naming_dict
 div = dnd['divider']
+br = dnd['bracket_right']
+bl = dnd['bracket_left']
 
 
 def split_name(full_name, part: int):

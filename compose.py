@@ -1,6 +1,6 @@
 import bpy, mathutils #type:ignore
 from .common import split_name, list_names, copy_armature, get_bone_chain, select_bones
-from .common import dnd, div, keep_composer
+from .common import dnd, div, br, bl, keep_composer
 
 
 class ARMATURE_OT_drig_compose(bpy.types.Operator):
@@ -41,7 +41,7 @@ class ARMATURE_OT_drig_compose(bpy.types.Operator):
             # To be used later when decomposing back to separate pieces
             def save_transform(object, bone_name, component, original):
                 transform = object.pose.bones[bone_name].constraints.new('TRANSFORM')
-                transform.name = f"COMPONENT{div}{original.name}"
+                transform.name = f"COMPONENT{bl}{original.name}{br}"
                 transform.mute = True
                 transform.from_min_x = component.location.x
                 transform.from_min_y = component.location.y
@@ -148,18 +148,29 @@ class ARMATURE_OT_drig_compose(bpy.types.Operator):
                 # Ignore IK bones. Go through bones, add unique names without IK to a list
                 # Remove any repeats. See if any of the bone groups only contains bones with those names...?
                 # I'll be honest maybe BASE should just be kept... 
-# 3. IK / Functions
-    # Go through all bones for IK's and get_parent until you locate a matching function.
-    # Copy the IK to the function bone and deactivate it / name it appropriately.
-    # If there is no funcbone, either leave it or assume the closest unconnected parent is 
-    # where it should go.
+            # 3. IK / Functions
+                # Go through all bones for IK's and get_parent until you locate a matching function.
+                # Copy the IK to the function bone and deactivate it / name it appropriately.
+                # If there is no funcbone, either leave it or assume the closest unconnected parent is 
+                # where it should go.
 # 4. Constraints
     # Add them to BASE, idk more details
 # 4. Decompose Sets
     # Lets assume we're rebuilding COMPOSITION_SETS.
     # Cycle through all bones, have a list of prefixes
     # make comp sets, add sets, assign equiv BASE bones to the sets.
-# 5. I think that's it?
+    # Delete all non-BASE/IK bones
+    # Really poles and such should be part of base in some way to prevent confusion here...
+# 5. Components
+    # The constraint is already there to tell us where to separate
+    # The constraint is on the bone the component is attached to...
+    # But what if theres multiple children...? Shouldnt it 
+    # Ah, but no guarantee theres a single parent either...
+    # This relies on BASE having been isolated
+    # Priority order:
+        # If the bone has a connected child, select recursive children of that child
+        # If no bone is connected, assume all children are part of the component
+        # UNLESS those children are part of IK, in which ignore them?
 # Should make some kind of comparer to check if the BASE is actually identical to itself unedited
 class ARMATURE_OT_drig_decompose(bpy.types.Operator):
     bl_idname = "armature.drig_decompose"
@@ -174,42 +185,35 @@ class ARMATURE_OT_drig_decompose(bpy.types.Operator):
         def remove_IK_bones_EDIT():
             chopping_block = []
             for bone in decomposer.data.edit_bones:
-                print(split_name(bone, 0))
                 if split_name(bone, 0) == dnd['ik']:
                     chopping_block.append(bone)
             for bone in chopping_block:
                     decomposer.data.edit_bones.remove(bone)
 
-        # THE BELOW is stupid but works... We got the function bone yes but that's always
-        # BASE lol... So we actually have to:
-            # Get the equivalent IK bone
-            # Trace its chain
-            # See if it has a constraint
-            # Copy that constraint back to the BASE bone.
-            # (At some point composition will have to compose from said constraint if present)
+        def transfer_function_constraint(function):
+            pobes = decomposer.pose.bones
+            if function == 'IK_BASIC':
+                # Funnily the pose.bone and data.bone uses here are necessary
+                ik_equiv = decomposer.data.bones[f"{dnd['ik']}{div}{split_name(bone, -1)}"]
+                chainbase = pobes[get_bone_chain(ik_equiv)[0]]
+                if ik_constraint := chainbase.constraints.get(dnd['ik']):
+                    # Interesting. The copy actually sets it to the deleted IK bone...
+                    # ...which throws up an error in the terminal, which may annoy someone, though it is convenient.
+                    ik_name = f"FUNCTION{bl}{chainbase.name}{br}"
+                    # Want to not use div here, should warn to not use []? 
+                    base_contraints = pobes[bone.name].constraints
+                    if ik_already_present := base_contraints.get(ik_name):
+                        base_contraints.remove(ik_already_present)
+                        # add a function to common to copy settings...?
+                    new_ik = base_contraints.copy(ik_constraint)
+                    new_ik.name = ik_name
 
-        # store all bones with functions in their properties
-        # remove them if processed?
-        functional_list = []
         for bone in decomposer.data.bones:
             if bone.drig_function_type != 'NONE':
-                functional_list.append(bone)
-                print("Found something!")
-        
-        for bone in functional_list:
-            chain = []
-            chainbase = get_bone_chain(bone, chain)[0]
-            if decomposer.data.bones[chainbase].drig_function_type:
-                print(decomposer.data.bones[chainbase])
-                #copy the constraint to equiv BASE, if one is already present overwrite it
-                pass
-            else:
-                # implement wierd chains here if needed
-                pass
-
+                transfer_function_constraint(bone.drig_function_type)
 
         bpy.ops.object.mode_set(mode='EDIT')
-        remove_IK_bones_EDIT() # Do this after finding the IK constraints lol
+        remove_IK_bones_EDIT()
         bpy.ops.object.mode_set(mode='OBJECT')
         #bpy.ops.armature.separate()
 
