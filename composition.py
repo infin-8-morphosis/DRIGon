@@ -2,8 +2,21 @@ import bpy, mathutils
 from .common import split_name, list_names, copy_armature, get_bone_chain, select_bones
 from .common import dnd, div, br, bl, keep_composer
 
-
+# This feels unsafe but idk... This grabs all the attributes for EditBones.
+property_list = []
+for attr in bpy.types.EditBone.bl_rna.properties.items():
+    if attr[0] in ['name', 'rna_type', 'collections']: continue
+    if attr[0] in ['select', 'select_tail', 'select_head']: continue
+    if attr[0] == 'use_connect': continue 
+    # Idk if the others are even necessary. This one breaks stuff
+    # But previous me had a cryptic if statement about using it...?
+    property_list.append(attr[0])
+            
 # Make a separate one for decomp? Or just get it to check the name of the object?
+# Do them separate and see how similar the code is?
+# If we move this to its own operator, then have all the identicality checking be in there?
+# Since finalise makes sense to be when the old BASE and the new BASE are compared.
+# When doing that dont forget to save the old BASE before it gets overwritten lol
 class ARMATURE_OT_drig_finalise(bpy.types.Operator):
     bl_idname = "armature.drig_finalise"
     bl_label = "Finalise"
@@ -33,28 +46,33 @@ class ARMATURE_OT_drig_finalise(bpy.types.Operator):
         return {'FINISHED'}
 
 
-def map_bone_settings(target, base, final):
-        if final:
+def map_bone_settings(receiver, sender, final):
+        if final: #What is this...
             pass
-            # target.use_connect = base.use_connect
-        target.head = base.head
-        target.tail = base.tail
-        target.matrix = base.matrix
+            # receiver.use_connect = sender.use_connect
+        # receiver.head = sender.head
+        # receiver.tail = sender.tail
+        # receiver.matrix = sender.matrix
+        # What are these...?
 
-        target.parent = base.parent
-        target.inherit_scale = base.inherit_scale
-        target.use_deform = base.use_deform
-        target.bbone_segments = base.bbone_segments
-        target.bbone_rollout = base.bbone_rollout
-        target.bbone_rollin = base.bbone_rollin
-        target.bbone_easein = base.bbone_easein
-        target.bbone_easeout = base.bbone_easeout
-        target.bbone_x = base.bbone_x
-        target.bbone_z = base.bbone_z
-        target.bbone_handle_type_start = base.bbone_handle_type_start
-        target.bbone_custom_handle_start = base.bbone_custom_handle_start
-        target.bbone_handle_type_end = base.bbone_handle_type_end
-        target.bbone_custom_handle_end = base.bbone_custom_handle_end
+        for prop in property_list:
+            if sender.is_property_readonly(prop): continue
+            setattr(receiver, prop, getattr(sender, prop))
+
+        # receiver.parent = sender.parent
+        # receiver.inherit_scale = sender.inherit_scale
+        # receiver.use_deform = sender.use_deform
+        # receiver.bbone_segments = sender.bbone_segments
+        # receiver.bbone_rollout = sender.bbone_rollout
+        # receiver.bbone_rollin = sender.bbone_rollin
+        # receiver.bbone_easein = sender.bbone_easein
+        # receiver.bbone_easeout = sender.bbone_easeout
+        # receiver.bbone_x = sender.bbone_x
+        # receiver.bbone_z = sender.bbone_z
+        # receiver.bbone_handle_type_start = sender.bbone_handle_type_start
+        # receiver.bbone_custom_handle_start = sender.bbone_custom_handle_start
+        # receiver.bbone_handle_type_end = sender.bbone_handle_type_end
+        # receiver.bbone_custom_handle_end = sender.bbone_custom_handle_end
 
 def transfer_bone_EDIT(composer, target, bone_name):
     if (e_bones := target.data.edit_bones).get(bone_name):
@@ -144,6 +162,18 @@ def add_drig_function(object, bone_name):
         add_ik_target_EDIT(object, ik, chain) # Note: Renamed Sets need to be refreshed as the function breaks in the bone menu
         chain[:] = []
 
+def split_bone_recursive_EDIT(object, bone, amount: int, start = True, count = 0):
+    if amount <= 0: return "Don't."
+    bpy.ops.armature.subdivide()             
+    bone.select = False
+    print(context.selected_bones[0])
+    object.data.edit_bones.active = context.selected_bones[0]
+    count += 1
+    if amount == count:
+        return
+    else:
+        bone = object.data.edit_bones.active
+        split_bone_recursive_EDIT(object, bone, amount, False, count)
 
 classes = [ARMATURE_OT_drig_finalise]
 
