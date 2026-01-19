@@ -1,4 +1,4 @@
-import bpy #type:ignore
+import bpy
 from .common import split_name, list_names, copy_armature, get_bone_chain, select_bones
 from .common import dnd, div, br, bl, keep_composer
 

@@ -1,4 +1,4 @@
-import bpy #type:ignore
+import bpy
 from .common import split_name, copy_armature
 from .common import dnd, div
 

@@ -1,4 +1,4 @@
-import bpy #type:ignore
+import bpy
 from bpy.types import (Panel, Operator, Armature) #type:ignore
 from .common import split_name, dnd, div
 
