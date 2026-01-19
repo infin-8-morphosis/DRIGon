@@ -88,10 +88,8 @@ class DATA_PT_drig_ui_main(bpy.types.Panel):
             base.prop(object,'drig_base', text="", placeholder="Base")
             target.prop(object,'drig_target_main', text="", placeholder="Not Composed")
 
-            if object == object.drig_base:
-                base.enabled = False
-            if object == object.drig_target_main:
-                target.enabled = False
+            if object == object.drig_base:          base.enabled = False
+            if object == object.drig_target_main:   target.enabled = False
 
 
 class DATA_PT_drig_ui_rig_structure(bpy.types.Panel):
@@ -168,7 +166,6 @@ class DATA_PT_drig_ui_morphs(bpy.types.Panel):
 
         object = context.object
 
-
         layout = self.layout
 
         layout.separator()
@@ -189,13 +186,10 @@ class DATA_PT_drig_ui_morphs(bpy.types.Panel):
         morph_list.prop(object.data,'name',text=f"{name.capitalize()}", icon="ARMATURE_DATA")
 
         for armature in bpy.data.armatures:
-            if armature == object.data:
-                continue
+            if armature == object.data: continue
             split = armature.name.split(div)
-            if split[0] != dnd['morph']:
-                continue
-            if split[1] != split_name(object.data.name,1):
-                continue
+            if split[0] != dnd['morph']: continue
+            if split[1] != split_name(object.data.name,1): continue
             else:
                 name = split[-1]
                 morph_list.prop(armature,'name',text=f"{name.capitalize()}", icon="ARMATURE_DATA")

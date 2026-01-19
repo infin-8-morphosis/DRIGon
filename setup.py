@@ -11,8 +11,8 @@ class ARMATURE_OT_drig_initialise(bpy.types.Operator):
     def execute(self,context):
                 
         def main():
-            if not context.scene.drig_morph_select:
-                context.scene.drig_morph_select = None
+            if not (selection := context.scene.drig_morph_select):
+                selection = None
             for object in bpy.data.objects:
                 if object.type != 'ARMATURE': continue
                 elif object.drig_target_main and object.drig_base: continue

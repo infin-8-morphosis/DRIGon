@@ -76,11 +76,13 @@ class ARMATURE_OT_drig_compose(bpy.types.Operator):
                 # This is separate presumably to reduce redundant bone checks?
                 # Assumes no overlapping bones!
                 # use the transform to join the component base to the component parent bone.
-                    for each in composer.data.collections_all[dnd['master_set']].bones_recursive:
+                    master_set = composer.data.collections_all[dnd['master_set']]
+                    for each in master_set.bones_recursive:
                         if each.head_local == transform: # TODO: Minus component transform so this works outside 0,0,0
                             bpy.ops.object.mode_set(mode='EDIT')
-                            composer.data.edit_bones[each.name].parent = composer.data.edit_bones[name]
-                            composer.data.edit_bones[each.name].use_connect = True # Not always wanted!
+                            e_bones = composer.data.edit_bones
+                            e_bones[each.name].parent = e_bones[name]
+                            e_bones[each.name].use_connect = True # Not always wanted!
                             bpy.ops.object.mode_set(mode='OBJECT')
                             break
 
@@ -91,17 +93,19 @@ class ARMATURE_OT_drig_compose(bpy.types.Operator):
             composer.drig_base = base
             cd = composer.data
             bd = base.data
-            cd.name = f"{dnd['composer']}{div}{split_name(composer,1)}{div}{split_name(bd,-1)}"
+            sn = split_name
+            cd.name = f"{dnd['composer']}{div}{sn(composer,1)}{div}{sn(bd,-1)}"
 
             bpy.data.objects[base.name].select_set(False)
             component_list = []
-            for bone in base.data.collections_all[dnd['master_set']].bones_recursive:
+
+            for bone in bd.collections_all[dnd['master_set']].bones_recursive:
                 if bone.drig_component_target:
                     component_list.append(bone.name)
             
             merge_component(base, component_list)
 
-            for bone in composer.data.collections_all[dnd['master_set']].bones_recursive:
+            for bone in cd.collections_all[dnd['master_set']].bones_recursive:
                 bone.name = f"{dnd['base']}{div}{bone.name}"
                 bone.use_deform = False
 
@@ -207,6 +211,7 @@ class ARMATURE_OT_drig_decompose(bpy.types.Operator):
                         # add a function to common to copy settings...?
                     new_ik = base_contraints.copy(ik_constraint)
                     new_ik.name = ik_name
+                    new_ik.target = rig # This is to remove the terminal error
 
         for bone in decomposer.data.bones:
             if bone.drig_function_type != 'NONE':
@@ -273,10 +278,10 @@ def map_bone_settings(target, base, final):
         target.bbone_custom_handle_end = base.bbone_custom_handle_end
 
 def transfer_bone_EDIT(composer, target, bone_name):
-    if target.data.edit_bones.get(bone_name):
-        targbone = target.data.edit_bones[bone_name]
+    if (e_bones := target.data.edit_bones).get(bone_name):
+        targbone = e_bones[bone_name]
     else:
-        targbone = target.data.edit_bones.new(bone_name)
+        targbone = e_bones.new(bone_name)
     compbone = composer.data.edit_bones[bone_name]
     map_bone_settings(targbone, compbone, True)
 
@@ -293,18 +298,18 @@ def duplicate_bone_EDIT(armature, bone_name, set):
 def determine_parent_EDIT(armature, bone_name, set):
 
     def parent_as_kept():
-        if base_equiv.parent:
-            kept = armature.edit_bones[f"{set.name}{div}{split_name(base_equiv.parent,-1)}"]
+        if bep := base_equiv.parent:
+            kept = armature.edit_bones[f"{set.name}{div}{split_name(bep,-1)}"]
         else:
             kept = None
         armature.edit_bones[bone_name].use_connect = connect
         return kept
 
     def parent_as_equivalent():
-        if set.parent.name == dnd['master_set']:
+        if (pset := set.parent.name) == dnd['master_set']:
             equiv = None
         else:
-            equiv = armature.edit_bones[f"{set.parent.name}{div}{bone_name.split(div)[-1]}"]
+            equiv = armature.edit_bones[f"{pset}{div}{bone_name.split(div)[-1]}"]
         return equiv
 
     method = set.drig_parent_method
@@ -321,8 +326,8 @@ def add_trans_constraints(object, bone_name, set):
     type = f'COPY_{set.drig_trans_type}'
     constraint = object.pose.bones[f"{bone_name}"].constraints.new(type)
     constraint.target = object
-    if set.drig_trans_target:
-        constraint.subtarget = f"{set.drig_trans_target}{div}{bone_name.split(div)[-1]}"
+    if dtt := set.drig_trans_target:
+        constraint.subtarget = f"{dtt}{div}{bone_name.split(div)[-1]}"
     else:
         constraint.subtarget = f"{set.parent.name}{div}{bone_name.split(div)[-1]}"
     #alter constraint settings here
