@@ -1,5 +1,5 @@
 import bpy, mathutils
-from .common import split_name, list_names, copy_armature, get_bone_chain, select_bones
+from .common import split_name, list_names, get_bone_chain, select_bones
 from .common import dnd, div, br, bl, keep_composer
 
 # This feels unsafe but idk... This grabs all the attributes for EditBones.
@@ -11,7 +11,9 @@ for attr in bpy.types.EditBone.bl_rna.properties.items():
     # Idk if the others are even necessary. This one breaks stuff
     # But previous me had a cryptic if statement about using it...?
     property_list.append(attr[0])
-            
+
+
+
 # Make a separate one for decomp? Or just get it to check the name of the object?
 # Do them separate and see how similar the code is?
 # If we move this to its own operator, then have all the identicality checking be in there?
@@ -46,12 +48,16 @@ class ARMATURE_OT_drig_finalise(bpy.types.Operator):
         return {'FINISHED'}
 
 
+
 def map_bone_settings(receiver, sender, final):
+
         for prop in property_list:
             if sender.is_property_readonly(prop): continue
             setattr(receiver, prop, getattr(sender, prop))
 
+
 def transfer_bone_EDIT(composer, target, bone_name):
+
     if (e_bones := target.data.edit_bones).get(bone_name):
         targbone = e_bones[bone_name]
     else:
@@ -59,15 +65,86 @@ def transfer_bone_EDIT(composer, target, bone_name):
     compbone = composer.data.edit_bones[bone_name]
     map_bone_settings(targbone, compbone, True)
 
+
 def duplicate_bone_EDIT(armature, bone_name, set):
+
     copy_name = f"{set.name}{div}{bone_name.split(div)[-1]}"
     copy = armature.edit_bones.new(copy_name)
+    # TODO: lmao it doesnt work with the numbers? How has this not caused problems?
     # if bone_name.split('.')[-1] == '.001':
     #     copy.name.removesuffix('.002')
     # else:
     copy.name.removesuffix('.001')
     map_bone_settings(copy, armature.edit_bones[bone_name], False)
     return copy
+
+
+# Uses a constraint to save the orientation of the component
+# To be used later when decomposing back to separate pieces
+# Surely theres a better way to do this 
+def save_transform(object, bone_name, component, original):
+
+    transform = object.pose.bones[bone_name].constraints.new('TRANSFORM')
+    transform.name = f"COMPONENT{bl}{original.name}{br}"
+    transform.mute = True
+    transform.from_min_x = component.location.x
+    transform.from_min_y = component.location.y
+    transform.from_min_z = component.location.z
+    transform.from_min_x_rot = component.rotation_euler.x
+    transform.from_min_y_rot = component.rotation_euler.y
+    transform.from_min_z_rot = component.rotation_euler.z
+    transform.from_min_x_scale = component.scale.x
+    transform.from_min_y_scale = component.scale.y
+    transform.from_min_z_scale = component.scale.z
+    transform = mathutils.Vector((round(transform.from_min_x, 2),
+                                round(transform.from_min_y, 2),
+                                round(transform.from_min_z, 2)))
+    return transform
+
+
+def merge_components(context, base, composer):
+    
+    def copy_component(original):
+        bpy.data.objects[original.name].select_set(False)
+        component = original.copy()
+        component.data = original.data.copy()
+        return component
+
+    # Literally just uses the join operation
+    def join_component(composer, component):
+        bpy.ops.object.mode_set(mode='OBJECT')
+        bpy.data.objects[component.name].select_set(True)
+        context.view_layer.objects.active = composer
+        bpy.ops.object.join()
+
+    # Finds a bone that overlaps and parents / connects it to the base. Assumes only one does!
+    def find_and_connect_at_base(composer, transform, name):
+        master_set = composer.data.collections_all[dnd['master_set']]
+        for each in master_set.bones_recursive:
+            if each.head_local == transform: # TODO: Minus component transform so this works outside 0,0,0
+                bpy.ops.object.mode_set(mode='EDIT')
+                e_bones = composer.data.edit_bones
+                e_bones[each.name].parent = e_bones[name]
+                e_bones[each.name].use_connect = True # Not always wanted!
+                bpy.ops.object.mode_set(mode='OBJECT')
+                break
+    
+     # This is the name of the bone with the component property
+     # Ergo it is the attachment point. Should rename the list...?
+    
+    component_list = []
+    for bone in base.data.collections_all[dnd['master_set']].bones_recursive:
+        if bone.drig_component_target:
+            component_list.append(bone.name)
+
+    for name in component_list:
+        original = base.data.bones[name].drig_component_target
+        component = copy_component(original)
+        context.collection.objects.link(component)
+        transform = save_transform(composer, name, component, original)
+        join_component(composer, component)
+        find_and_connect_at_base(composer, transform, name) # Doesnt report if none found
+
 
 def determine_parent_EDIT(armature, bone_name, set):
 
@@ -89,6 +166,7 @@ def determine_parent_EDIT(armature, bone_name, set):
     method = set.drig_parent_method
     base_equiv = armature.edit_bones[f"{dnd['base_set']}{div}{bone_name.split(div)[-1]}"]
     connect = base_equiv.use_connect
+
     if method ==   'KEEP':              return parent_as_kept()
     elif method == 'EQUIV':             return parent_as_equivalent()
     elif method == 'EQUIV_PARENT':      return parent_as_equivalent().parent
@@ -96,7 +174,9 @@ def determine_parent_EDIT(armature, bone_name, set):
         if not base_equiv.use_connect:       return parent_as_equivalent()
         if base_equiv.use_connect:           return parent_as_kept()
 
+
 def add_trans_constraints(object, bone_name, set):
+
     type = f'COPY_{set.drig_trans_type}'
     constraint = object.pose.bones[f"{bone_name}"].constraints.new(type)
     constraint.target = object
@@ -106,9 +186,11 @@ def add_trans_constraints(object, bone_name, set):
         constraint.subtarget = f"{set.parent.name}{div}{bone_name.split(div)[-1]}"
     #alter constraint settings here
 
+
 def add_drig_function(object, bone_name):
 
     def add_ik_target_EDIT(object, ik, chain):
+
         bpy.ops.object.mode_set(mode='EDIT')
         select_bones(False, object, 'EDIT') # Deselected: All Bones 
         bones_EDIT = object.data.edit_bones
@@ -139,7 +221,9 @@ def add_drig_function(object, bone_name):
         add_ik_target_EDIT(object, ik, chain) # Note: Renamed Sets need to be refreshed as the function breaks in the bone menu
         chain[:] = []
 
+
 def split_bone_recursive_EDIT(object, bone, amount: int, start = True, count = 0):
+
     if amount <= 0: return "Don't."
     bpy.ops.armature.subdivide()             
     bone.select = False
@@ -151,6 +235,8 @@ def split_bone_recursive_EDIT(object, bone, amount: int, start = True, count = 0
     else:
         bone = object.data.edit_bones.active
         split_bone_recursive_EDIT(object, bone, amount, False, count)
+
+
 
 classes = [ARMATURE_OT_drig_finalise]
 

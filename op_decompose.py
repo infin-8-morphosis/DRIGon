@@ -1,7 +1,6 @@
 import bpy
 from .composition import *
 
-
 # TODO:
 # In theory this will all be in reverse, right?
 # For now, assume BASE is still in sync. In future it should be able to be reconstructed
@@ -45,11 +44,23 @@ class ARMATURE_OT_drig_decompose(bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}
     
     def execute(self,context):
+
         rig = context.object # Selection: RIG
         decomposer = copy_armature(rig, dnd['decomposer'], 'FINALISE', keep_composer)
         decomposer.data = rig.data.copy()
 
+        for bone in decomposer.data.bones:
+            if bone.drig_function_type != 'NONE':
+                transfer_function_constraint(bone.drig_function_type)
+
+        bpy.ops.object.mode_set(mode='EDIT')
+        remove_IK_bones_EDIT()
+        bpy.ops.object.mode_set(mode='OBJECT')
+        #bpy.ops.armature.separate()
+
+
         def remove_IK_bones_EDIT():
+
             chopping_block = []
             for bone in decomposer.data.edit_bones:
                 if split_name(bone, 0) == dnd['ik']:
@@ -57,7 +68,9 @@ class ARMATURE_OT_drig_decompose(bpy.types.Operator):
             for bone in chopping_block:
                     decomposer.data.edit_bones.remove(bone)
 
+
         def transfer_function_constraint(function):
+
             pobes = decomposer.pose.bones
             if function == 'IK_BASIC':
                 # Funnily the pose.bone and data.bone uses here are necessary
@@ -76,16 +89,9 @@ class ARMATURE_OT_drig_decompose(bpy.types.Operator):
                     new_ik.name = ik_name
                     new_ik.target = rig # This is to remove the terminal error
 
-        for bone in decomposer.data.bones:
-            if bone.drig_function_type != 'NONE':
-                transfer_function_constraint(bone.drig_function_type)
-
-        bpy.ops.object.mode_set(mode='EDIT')
-        remove_IK_bones_EDIT()
-        bpy.ops.object.mode_set(mode='OBJECT')
-        #bpy.ops.armature.separate()
-
         return {'FINISHED'}
+
+
 
 classes = [ARMATURE_OT_drig_decompose]
 

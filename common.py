@@ -49,12 +49,13 @@ def get_bone_chain(chain_base,list = []):
 	return list
 
 
-# Returns a copy of an armature with desired name and fate. Adds it to scene optionally.
-def copy_armature(old, name, fate: str, link: bool):
+# Returns a copy of an armature with desired name and fate.
+def copy_armature(old, name, fate: str):
 	new = old.copy()
 	new.name = f"{name}{div}{split_name(old, 1)}"
+	new.data = old.data.copy()
+	new.data.name
 	new.drig_fate = f"{fate}"
-	if link == True: bpy.context.collection.objects.link(new)
 	return new
 
 def select_bones(bool: bool, object, blender_mode, name_list = None):
