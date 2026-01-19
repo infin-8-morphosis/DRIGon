@@ -33,11 +33,15 @@ Decomp
         Var name for set, with data store specific bone. If none, assume same bone?
 
 
-Accessing drivers / determining driver location:
-C.object.animation_data.drivers[0].data_path
-'pose.bones["Bone"].location'
+January 2026
+----------------------------------------------------------------------------------------------------
 
-June
+I have returned. Decomposition is now sort of a thing. Lots to do but very happy with the 
+current work. These files are quite messy...
+Probably a goodish ideas to move some things to TODOs in the actual code.
+
+
+June 2025
 ----------------------------------------------------------------------------------------------------
 TODO: Essential
     Components

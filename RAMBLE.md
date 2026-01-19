@@ -26,3 +26,8 @@ Code Snippets
     Make dictionary {'man' : 2, etc} in CuProp and access it (only string, int, float, etc.)
         bpy.context.object["Property"]['man'] 
             2
+```
+    Accessing drivers / determining driver location:
+        C.object.animation_data.drivers[0].data_path
+        'pose.bones["Bone"].location'
+

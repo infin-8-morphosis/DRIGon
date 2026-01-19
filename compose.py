@@ -224,10 +224,10 @@ class ARMATURE_OT_drig_decompose(bpy.types.Operator):
 
         return {'FINISHED'}
 
-
+# Make a separate one for decomp? Or just get it to check the name of the object?
 class ARMATURE_OT_drig_finalise(bpy.types.Operator):
     bl_idname = "armature.drig_finalise"
-    bl_label = "Finalise Composition"
+    bl_label = "Finalise"
     bl_options = {'REGISTER', 'UNDO'}
     
     def execute(self,context):
