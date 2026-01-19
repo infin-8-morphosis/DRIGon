@@ -1,4 +1,6 @@
 import bpy #type:ignore
+from .common import split_name, list_names, copy_armature, get_bone_chain, select_bones
+from .common import dnd, div, br, bl, keep_composer
 
 class ARMATURE_OT_drig_tools_apply_pose(bpy.types.Operator):
     bl_idname = "armature.drig_tools_apply_pose"
@@ -65,9 +67,51 @@ def render_panel(self, context):
     sub1.operator("object.vertex_group_add", icon='ZOOM_ALL', text="")
     sub2 = main.row()
     sub2.prop(context.scene,'sync_bone_names',text="Sync Bones")
-    
 
-classes = [ARMATURE_OT_drig_tools_apply_pose]
+
+class ARMATURE_OT_drig_tools_split_recursive(bpy.types.Operator):
+    bl_idname = "armature.drig_tools_split_recursive"
+    bl_label = "Split Bone Recursively"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    split_amount: bpy.props.IntProperty(name="Splits")
+
+    def invoke(self, context, event):
+        wm = context.window_manager
+        return wm.invoke_props_dialog(self)
+    
+    def execute(self,context):
+
+        def split_bone_recursive_EDIT(object, bone, amount: int, start = True, count = 0):
+            if amount <= 0: return "Don't."
+            bpy.ops.armature.subdivide()             
+            bone.select = False
+            print(context.selected_bones[0])
+            object.data.edit_bones.active = context.selected_bones[0]
+            count += 1
+            if amount == count:
+                return
+            else:
+                bone = object.data.edit_bones.active
+                split_bone_recursive_EDIT(object, bone, amount, False, count)
+                
+        message = f"Popup Values: {self.split_amount}"
+        print(self.split_amount)
+        split_bone_recursive_EDIT(context.object, context.active_bone, self.split_amount)
+        return {'FINISHED'}
+    # Assumes a single bone is selected
+    # Works, needs to be made into an operator.
+    # Needs to also rename bones.
+
+# To undo splitting, we cant rely on connections, since components can be connected, and components 
+# Should only be divided once all other processes are done.
+# So we need to check for the COMPONENT constraint
+# Could be useful later.
+def dissolve_chain_EDIT():
+    get_bone_chain(chain_base,list = [])
+    bpy.ops.armature.dissolve()
+
+classes = [ARMATURE_OT_drig_tools_apply_pose, ARMATURE_OT_drig_tools_split_recursive]
 
 def register():
     for cls in classes: bpy.utils.register_class(cls)

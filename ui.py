@@ -11,22 +11,31 @@ class BONE_PT_drig_ui_bones(bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
-        return True
+        return context.object.type == 'ARMATURE'
 
     def draw(self, context):
         object = context.object
         armature = object.data
         bone = context.active_bone
 
-        main = self.layout.row()
-        func_area = main.column()
-        comp_area = main.column()
+        main = self.layout
 
-        func_area.label(text="Function", icon = "INFO")
+        chain_area = main.row()
+        main.separator(type='LINE')
+        func_area = main.row()
+        main.separator(type='LINE')
+        comp_area = main.row()
+        
+        chain_area.label(text="Chain")
+        chain_area.prop(bone, 'drig_chain_type', text="", placeholder="Type")
+        if context.active_bone.drig_chain_type not in ['SINGLE', 'JOINT']:
+            chain_area.prop(bone, 'drig_chain_amount', text="", placeholder="Amount")
+
+        func_area.label(text="Function")
         func_area.prop(bone,'drig_function_type', text="", placeholder="Type")
         func_area.prop_search(bone, 'drig_function_set', armature, "collections_all", text="")
 
-        comp_area.label(text="Component", icon = "INFO")
+        comp_area.label(text="Component")
         comp_area.prop(bone,'drig_component_target', text="", placeholder="Target")
         comp_area.prop_search(bone, 'drig_component_set', armature, "collections_all", text="")
 
@@ -49,16 +58,16 @@ class DATA_PT_drig_ui_main(bpy.types.Panel):
         def determine_operations():
             fate = context.object.drig_fate
             if not context.object.drig_target_main or not context.object.drig_base:
-                if      fate == 'PREPARE_BASE':                 main = 'armature.drig_prepare_base'
-                elif    fate == 'PREPARE_RIGIFY_COMPATIBILITY': main = 'mesh.primitive_cube_add'
-                elif    fate == 'NEW_TARGET_COMPOSE':           main = 'armature.drig_compose'
-                elif    fate == 'FINALISE':                     main = 'armature.drig_finalise'
-                else:                                           main = 'armature.drig_initialise'
-            elif fate == 'COMPOSE':                             main = 'armature.drig_compose'
-            elif fate == 'FINALISE':                            main = 'armature.drig_finalise'
-            elif fate == 'DECOMPOSE' or fate == 'INCOMPATIBLE': main = 'armature.drig_decompose'
-            else:                                               main = 'armature.drig_initialise'
-            operations.operator(main)
+                if      fate == 'PREPARE_BASE':                 main = 'prepare_base'
+                elif    fate == 'PREPARE_RIGIFY_COMPATIBILITY': main = 'initialise' # TODO
+                elif    fate == 'NEW_TARGET_COMPOSE':           main = 'compose'
+                elif    fate == 'FINALISE':                     main = 'finalise'
+                else:                                           main = 'initialise'
+            elif fate == 'COMPOSE':                             main = 'compose'
+            elif fate == 'FINALISE':                            main = 'finalise'
+            elif fate == 'DECOMPOSE' or fate == 'INCOMPATIBLE': main = 'decompose'
+            else:                                               main = 'initialise'
+            operations.operator(f"armature.drig_{main}")
         
         def determine_alerts():
             if not object.get('drig_rigify_compatibility') and armature.get("rig_id"):
@@ -239,6 +248,8 @@ class DATA_PT_drig_tools(bpy.types.Panel):
 
         operations = layout.column()
         operations.operator('armature.drig_tools_apply_pose')
+        operations.operator('armature.drig_tools_split_recursive')
+        #operations.operator('armature.drig_tools_dissolve_chain')
 
 
 classes = [BONE_PT_drig_ui_bones,

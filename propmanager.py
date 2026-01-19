@@ -54,6 +54,15 @@ bt.Bone.drig_function_type =        bp.EnumProperty(
     items=function_types,
     description="Add functionality to a chain of bones")
 
+bt.Bone.drig_chain_amount =         bp.IntProperty(default=1, min=1, soft_max=10)
+chain_types =                      [("SINGLE", "Single", "Leave the bone as a single bone"),
+                                    ("SPLIT", "Split", "Divide into a chain of equally-sized bones"),
+                                    ("RECURSIVE", "Recursive", "Divide into a chain of progressively smaller bones"),
+                                    ("JOINT", "Joint", "Divide in two, with a configured 'elbow' between")]
+bt.Bone.drig_chain_type =           bp.EnumProperty(
+    items=chain_types,
+    description="Divide a bone into a chain of bones")
+
 bt.Bone.drig_component_target =     bp.PointerProperty(type=bt.Object)
 bt.Bone.drig_component_set =        bp.StringProperty()
 bt.Bone.drig_component_connected =  bp.BoolProperty(
