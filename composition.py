@@ -47,32 +47,9 @@ class ARMATURE_OT_drig_finalise(bpy.types.Operator):
 
 
 def map_bone_settings(receiver, sender, final):
-        if final: #What is this...
-            pass
-            # receiver.use_connect = sender.use_connect
-        # receiver.head = sender.head
-        # receiver.tail = sender.tail
-        # receiver.matrix = sender.matrix
-        # What are these...?
-
         for prop in property_list:
             if sender.is_property_readonly(prop): continue
             setattr(receiver, prop, getattr(sender, prop))
-
-        # receiver.parent = sender.parent
-        # receiver.inherit_scale = sender.inherit_scale
-        # receiver.use_deform = sender.use_deform
-        # receiver.bbone_segments = sender.bbone_segments
-        # receiver.bbone_rollout = sender.bbone_rollout
-        # receiver.bbone_rollin = sender.bbone_rollin
-        # receiver.bbone_easein = sender.bbone_easein
-        # receiver.bbone_easeout = sender.bbone_easeout
-        # receiver.bbone_x = sender.bbone_x
-        # receiver.bbone_z = sender.bbone_z
-        # receiver.bbone_handle_type_start = sender.bbone_handle_type_start
-        # receiver.bbone_custom_handle_start = sender.bbone_custom_handle_start
-        # receiver.bbone_handle_type_end = sender.bbone_handle_type_end
-        # receiver.bbone_custom_handle_end = sender.bbone_custom_handle_end
 
 def transfer_bone_EDIT(composer, target, bone_name):
     if (e_bones := target.data.edit_bones).get(bone_name):
