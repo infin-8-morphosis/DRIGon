@@ -50,7 +50,7 @@ class ARMATURE_OT_drig_compose(bpy.types.Operator):
 
         base = context.object.drig_base # Selection: Base
         composer = copy_armature(base, dnd['composer'], 'FINALISE')
-        if keep_composer: bpy.context.collection.objects.link(composer)
+        if keep_composer: context.collection.objects.link(composer)
         composer.drig_base = base
         sn = split_name
         composer.data.name = f"{dnd['composer']}{div}{sn(composer,1)}{div}{sn(base.data,-1)}"

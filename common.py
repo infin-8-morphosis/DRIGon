@@ -54,7 +54,6 @@ def copy_armature(old, name, fate: str):
 	new = old.copy()
 	new.name = f"{name}{div}{split_name(old, 1)}"
 	new.data = old.data.copy()
-	new.data.name
 	new.drig_fate = f"{fate}"
 	return new
 
