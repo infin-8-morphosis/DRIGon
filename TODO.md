@@ -1,5 +1,16 @@
 __Drake-Rigger - Notes__
 
+Alright so transforms arent great... 
+
+Recursive split - For tails and tentacles, wibbly things
+Select bone
+
+
+        
+split_bone_recursive_EDIT(C.object, C.active_bone, 3)
+
+You should have the 0.2, version stuff, be branches, to get used to using branches
+
 Add `assert`s? Perhaps instead of our selection comments?
 
 What we need is some debug tools to test various operations without actually integrating

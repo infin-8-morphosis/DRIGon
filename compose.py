@@ -33,6 +33,11 @@ class ARMATURE_OT_drig_compose(bpy.types.Operator):
                 for child in set.children:
                     compose_set(composer, child)
 
+        def process_chain_EDIT(composer, bone):
+            if bone.drig_chain_type == 'SPLIT':
+                bpy.ops.armature.subdivide(number_cuts = bone.drig_chain_amount)
+                
+
         # Copies base, adds new armature, removes all bones from bone groups, except COMPOSITION_SETS.
         # This is where components are joined. Should that be separated too?
         def make_composer():
@@ -128,6 +133,15 @@ class ARMATURE_OT_drig_compose(bpy.types.Operator):
         bpy.ops.object.mode_set(mode='EDIT')
         for set in comp_set.children: 
             compose_set(composer, set)
+
+        # bpy.ops.object.mode_set(mode='EDIT')
+        # for bone in base_set.bones: # Add chains here?
+        #     if bone.drig_chain_type != 'SINGLE':
+        #         select_bones(False, composer, 'EDIT') # I swear that last parameter isnt used
+        #         composer.data.edit_bones.active = composer.data.edit_bones[bone.name]
+        #         process_chain()
+
+        # Why does this need to be in edit mode?
         for bone in base_set.bones:
             if bone.drig_function_type != 'NONE':
                 add_drig_function(composer, bone.name)
