@@ -1,4 +1,4 @@
-import bpy #type:ignore
+import bpy
 bt, bp = bpy.types, bpy.props
 
 # Scene 

@@ -1,6 +1,7 @@
-import bpy #type:ignore
+import bpy
 from .common import split_name, list_names, copy_armature, get_bone_chain, select_bones
 from .common import dnd, div, br, bl, keep_composer
+
 
 class ARMATURE_OT_drig_tools_apply_pose(bpy.types.Operator):
     bl_idname = "armature.drig_tools_apply_pose"
@@ -57,17 +58,6 @@ class ARMATURE_OT_drig_tools_rename_vertex_groups(bpy.types.Operator):
         #         v_groups[n[0]].name = n[1]
         return {'FINISHED'}
 
-# fucking around here. Did this break...? I swear it worked somewhat.
-def render_panel(self, context):
-
-    main = self.layout.column()
-    sub1 = main.row()
-    sub1.prop(context.scene, 'my_tool', text="", placeholder="Find...")
-    sub1.prop(context.scene, 'my_tool', text="", placeholder="Replace...")
-    sub1.operator("object.vertex_group_add", icon='ZOOM_ALL', text="")
-    sub2 = main.row()
-    sub2.prop(context.scene,'sync_bone_names',text="Sync Bones")
-
 
 class ARMATURE_OT_drig_tools_split_recursive(bpy.types.Operator):
     bl_idname = "armature.drig_tools_split_recursive"
@@ -82,34 +72,56 @@ class ARMATURE_OT_drig_tools_split_recursive(bpy.types.Operator):
     
     def execute(self,context):
 
+        message = f"Popup Values: {self.split_amount}"
+        print(self.split_amount)
+        split_bone_recursive_EDIT(context.object, context.active_bone, self.split_amount)
+        
+
+        # Assumes a single bone is selected
+        # Works, needs to be made into an operator.
+        # Needs to also rename bones.
         def split_bone_recursive_EDIT(object, bone, amount: int, start = True, count = 0):
+
             if amount <= 0: return "Don't."
             bpy.ops.armature.subdivide()             
             bone.select = False
             print(context.selected_bones[0])
             object.data.edit_bones.active = context.selected_bones[0]
             count += 1
+
             if amount == count:
                 return
             else:
                 bone = object.data.edit_bones.active
                 split_bone_recursive_EDIT(object, bone, amount, False, count)
-                
-        message = f"Popup Values: {self.split_amount}"
-        print(self.split_amount)
-        split_bone_recursive_EDIT(context.object, context.active_bone, self.split_amount)
-        return {'FINISHED'}
-    # Assumes a single bone is selected
-    # Works, needs to be made into an operator.
-    # Needs to also rename bones.
+        
+
+        return {'FINISHED'}         
+
+
 
 # To undo splitting, we cant rely on connections, since components can be connected, and components 
 # Should only be divided once all other processes are done.
 # So we need to check for the COMPONENT constraint
 # Could be useful later.
 def dissolve_chain_EDIT():
+
     get_bone_chain(chain_base,list = [])
     bpy.ops.armature.dissolve()
+
+
+# fucking around here. Did this break...? I swear it worked somewhat.
+def render_panel(self, context):
+
+    main = self.layout.column()
+    sub1 = main.row()
+    sub1.prop(context.scene, 'my_tool', text="", placeholder="Find...")
+    sub1.prop(context.scene, 'my_tool', text="", placeholder="Replace...")
+    sub1.operator("object.vertex_group_add", icon='ZOOM_ALL', text="")
+    sub2 = main.row()
+    sub2.prop(context.scene,'sync_bone_names',text="Sync Bones")
+
+
 
 classes = [ARMATURE_OT_drig_tools_apply_pose, ARMATURE_OT_drig_tools_split_recursive]
 

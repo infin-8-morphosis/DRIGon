@@ -1,6 +1,7 @@
-import bpy #type:ignore
+import bpy
 from .common import split_name, copy_armature
 from .common import dnd, div
+
 
 # Checks every armature for correct target / base properties, sets fates and checks for rigify.
 class ARMATURE_OT_drig_initialise(bpy.types.Operator):
@@ -9,7 +10,8 @@ class ARMATURE_OT_drig_initialise(bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}
     
     def execute(self,context):
-                
+
+
         def main():
             if not (selection := context.scene.drig_morph_select):
                 selection = None
@@ -21,40 +23,43 @@ class ARMATURE_OT_drig_initialise(bpy.types.Operator):
                     else:
                         rigify_check = check_for_rigify(object.data)
                         object.drig_fate = determine_fate(rigify_check,object)
-        
+            
+
         def determine_fate(rigify_check,subject):
+
+            base = subject.drig_base
+            target = subject.drig_target_main
+            data = subject.data
+            
             if rigify_check == False:
-                if subject.drig_base and not subject.drig_target_main:
-                    return 'NEW_TARGET_COMPOSE'
-                else:
-                    return 'PREPARE_BASE'
+                if base and not target:             return 'NEW_TARGET_COMPOSE'
+                else:                               return 'PREPARE_BASE'
             else:
-                if subject.data.get('rig_id'):
-                    return 'INCOMPATIBLE' 
-                elif subject.data.get('rigify_target_rig'):
-                    return 'PREPARE_RIGIFY_COMPATIBILITY'
-                elif subject.drig_base and not subject.drig_target_main:
-                    return 'NEW_TARGET_COMPOSE'
-                else:
-                    return 'PREPARE_BASE'
-                
+                if data.get('rig_id'):              return 'INCOMPATIBLE' 
+                elif data.get('rigify_target_rig'): return 'PREPARE_RIGIFY_COMPATIBILITY'
+
+                elif base and not target:           return 'NEW_TARGET_COMPOSE'
+                else:                               return 'PREPARE_BASE'
+
+
         def find_stray_assignments(suspect):
 
             if split_name(suspect,0) not in dnd.values():
                 return False
+
             for object in bpy.data.objects:
-                if object.type != 'ARMATURE':
-                    continue
-                if split_name(object,0) not in dnd.values():
-                    continue
-                if split_name(suspect,0) == split_name(object,0):
-                    continue
+
+                if object.type != 'ARMATURE': continue
+                if split_name(object,0) not in dnd.values(): continue
+                if split_name(suspect,0) == split_name(object,0): continue
+
                 if object.drig_base == suspect.drig_base:
                     suspect.drig_target_main = object
                     return True
                 elif object.drig_target_main == suspect.drig_target_main:
                     suspect.drig_base = object
                     return True
+
                 if split_name(suspect,1) == split_name(object,1):
                     if split_name(object,0) == dnd['target']:
                         suspect.drig_target_main = object
@@ -64,8 +69,10 @@ class ARMATURE_OT_drig_initialise(bpy.types.Operator):
                         object.drig_target_main = suspect
                         suspect.drig_base = object
                         return True
+
             return False
 
+        #How to make this shorter...?
         def check_for_rigify(armature):
             try:
                 if bpy.types.Armature.rigify_target_rig or armature.get("rig_id") or armature.get('rigify_target_rig'):
@@ -73,8 +80,11 @@ class ARMATURE_OT_drig_initialise(bpy.types.Operator):
             except:
                 return False
 
+
         main()
         return {'FINISHED'}
+
+
 
 # Adjusts properties and names, adds COMPOSITION_SETS. Assigns all current bones to BASE set.
 class ARMATURE_OT_drig_prepare_base(bpy.types.Operator):
@@ -108,8 +118,8 @@ class ARMATURE_OT_drig_make_target(bpy.types.Operator):
     
     def execute(self,context):
 
-        target = copy_armature(context.object, dnd['target'], 'DECOMPOSE', True)
-        target.data = bpy.context.object.data.copy()
+        target = copy_armature(context.object, dnd['target'], 'DECOMPOSE')
+        context.collection.objects.link(target)
         target.data.name = f"{dnd['armature']}{div}{split_name(context.object,1)}{div}{split_name(context.object.data,-1)}"
         context.object.drig_target_main = target
         context.object.drig_fate = 'FINALISE'

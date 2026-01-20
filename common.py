@@ -1,4 +1,4 @@
-import bpy #type:ignore
+import bpy
 
 keep_composer = True
 
@@ -20,10 +20,9 @@ drig_naming_dict = {
                 'fk' : 'FK',
 				'master_set' : 'COMPOSITION_SETS',
 				'base_set' : 'BASE'}
+
 dnd = drig_naming_dict
-div = dnd['divider']
-br = dnd['bracket_right']
-bl = dnd['bracket_left']
+div, br, bl = dnd['divider'], dnd['bracket_right'], dnd['bracket_left']
 
 
 def split_name(full_name, part: int):
@@ -38,7 +37,6 @@ def list_names(item_list):
     return name_list
 
 
-# Doesnt this assume a single child? How does this process children...?
 def get_bone_chain(chain_base,list = []):
 	if not chain_base.children:
 		list.append(chain_base.name)
@@ -51,15 +49,15 @@ def get_bone_chain(chain_base,list = []):
 	return list
 
 
-# Returns a copy of an armature with desired name and fate. Adds it to scene optionally.
-def copy_armature(old, name, fate: str, link: bool):
+# Returns a copy of an armature with desired name and fate.
+def copy_armature(old, name, fate: str):
 	new = old.copy()
 	new.name = f"{name}{div}{split_name(old, 1)}"
+	new.data = old.data.copy()
 	new.drig_fate = f"{fate}"
-	if link == True: bpy.context.collection.objects.link(new)
 	return new
 
-def select_bones(bool: bool, object, blender_mode, name_list = None): # why is blender_mode here...?
+def select_bones(bool: bool, object, blender_mode, name_list = None):
 	if name_list != None:
 		bpy.ops.object.mode_set(mode= blender_mode)
 		if blender_mode == 'EDIT': subject = object.data.edit_bones
