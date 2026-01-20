@@ -1,15 +1,31 @@
 __Drake-Rigger - Notes__
 
+Still gotta make a thing to symmetrise a rig.
+And a thing to add bones to a vertex groups points in normal orientation
+    Can either: Add real bones onto a vertex groups points using vertex parenting
+    and some scripting to access the vertex groups points
+    Good for front / outer / messy hair that needs fine manipulation
+    See DEMON_GeoNodesArmatureHair
+Or
+    Use geo nodes 'Instance on Points' to instance a bones object on several points
+    This would be good for manes and layered hair
+
+Identicality checker:
+Get list of bone names from original BASE
+Cycle through them and see if original BASE's bones are all:
+    In the same position as the decomposed BASE
+    Have matching properties
+Could generalise this and have it check that RIG is identical to COMPOSER
+First we need to actually finalise DECOMPOSER though
+Remember, one edit mode!
+
+Tool Idea:
+Read textfile and go frame by frame to alter pose based on matching names of pose assets,
+the text file would have to be phonetic but... 
+
+Likely ideal is to have a toggle for them.
+
 Alright so transforms arent great... 
-
-Recursive split - For tails and tentacles, wibbly things
-Select bone
-
-
-        
-split_bone_recursive_EDIT(C.object, C.active_bone, 3)
-
-You should have the 0.2, version stuff, be branches, to get used to using branches
 
 Add `assert`s? Perhaps instead of our selection comments?
 
@@ -29,10 +45,9 @@ What Has Not Been Done:
     Decomposition
     Add sync / rename description to property tooltips
 
-
 Add tool for mass-renaming Vertex Groups
 
-For decomp: Check what bones have deform on. If yes, check deform on the base set bones.
+For decomp: Check what bones have deform on. If yes, check deform on the set.
 could completely reverse engineer the set assignments based on what bones are present. Would that even be useful?
 
 Decomp
