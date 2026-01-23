@@ -1,6 +1,13 @@
 __Drake-Rigger - Notes__
 
 Still gotta make a thing to symmetrise a rig.
+    Go through all bones
+        Check if the tail-end of the bone is at X 0
+        If it isnt, duplicate the bone
+        Change the Head and Tail of the bone from + to -, or - to + unless its at 0
+        Flip the roll
+        Rename it to .L or .R, strip the .001
+        Not sure if using ops is better for some of this. Less control.
 And a thing to add bones to a vertex groups points in normal orientation
     Can either: Add real bones onto a vertex groups points using vertex parenting
     and some scripting to access the vertex groups points

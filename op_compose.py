@@ -57,7 +57,7 @@ class ARMATURE_OT_drig_compose(bpy.types.Operator):
 
         bpy.data.objects[base.name].select_set(False) #Deselected: Base | Selection: None
 
-        merge_components(context, base, composer)
+        merge_components(base, composer)
 
         collections = composer.data.collections_all
 

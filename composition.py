@@ -102,7 +102,7 @@ def save_transform(object, bone_name, component, original):
     return transform
 
 
-def merge_components(context, base, composer):
+def merge_components(base, composer):
     
     def copy_component(original):
         bpy.data.objects[original.name].select_set(False)
@@ -114,7 +114,7 @@ def merge_components(context, base, composer):
     def join_component(composer, component):
         bpy.ops.object.mode_set(mode='OBJECT')
         bpy.data.objects[component.name].select_set(True)
-        context.view_layer.objects.active = composer
+        bpy.context.view_layer.objects.active = composer
         bpy.ops.object.join()
 
     # Finds a bone that overlaps and parents / connects it to the base. Assumes only one does!
@@ -140,7 +140,7 @@ def merge_components(context, base, composer):
     for name in component_list:
         original = base.data.bones[name].drig_component_target
         component = copy_component(original)
-        context.collection.objects.link(component)
+        bpy.context.collection.objects.link(component)
         transform = save_transform(composer, name, component, original)
         join_component(composer, component)
         find_and_connect_at_base(composer, transform, name) # Doesnt report if none found
