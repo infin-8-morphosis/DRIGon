@@ -1,5 +1,7 @@
 __Drake-Rigger - Notes__
 
+# Symmetry
+
 Still gotta make a thing to symmetrise a rig.
     Go through all bones
         Check if the tail-end of the bone is at X 0
@@ -17,7 +19,8 @@ Or
     Use geo nodes 'Instance on Points' to instance a bones object on several points
     This would be good for manes and layered hair
 
-Identicality checker:
+
+# Identicality checker:
 Get list of bone names from original BASE
 Cycle through them and see if original BASE's bones are all:
     In the same position as the decomposed BASE
@@ -26,15 +29,20 @@ Could generalise this and have it check that RIG is identical to COMPOSER
 First we need to actually finalise DECOMPOSER though
 Remember, one edit mode!
 
-Tool Idea:
+
+# Tool Idea:
+
 Read textfile and go frame by frame to alter pose based on matching names of pose assets,
 the text file would have to be phonetic but... 
 
 Likely ideal is to have a toggle for them.
 
-Alright so transforms arent great... 
+Alright so transforms arent great...
 
+
+# Asserts
 Add `assert`s? Perhaps instead of our selection comments?
+#
 
 What we need is some debug tools to test various operations without actually integrating
 them into the UI
@@ -52,12 +60,10 @@ What Has Not Been Done:
     Decomposition
     Add sync / rename description to property tooltips
 
+# Vertex Group Renamer
 Add tool for mass-renaming Vertex Groups
 
-For decomp: Check what bones have deform on. If yes, check deform on the set.
-could completely reverse engineer the set assignments based on what bones are present. Would that even be useful?
-
-Decomp
+# Decomp
     Make Decomposer by duping RIG
     Delete everything except BASE
     Reference RIG to ensure the duping process isnt relied on
@@ -65,6 +71,9 @@ Decomp
         I guess use a var name to store the set / bone name. 
         Var name for set, with data store specific bone. If none, assume same bone?
 
+For decomp: Check what bones have deform on. If yes, check deform on the set.
+could completely reverse engineer the set assignments based on what bones are present. Would that even be useful?
+#
 
 January 2026
 ----------------------------------------------------------------------------------------------------
