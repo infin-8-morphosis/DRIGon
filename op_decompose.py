@@ -81,11 +81,11 @@ class ARMATURE_OT_drig_decompose(bpy.types.Operator):
                     # ...which throws up an error in the terminal, which may annoy someone, though it is convenient.
                     ik_name = f"FUNCTION{bl}{chainbase.name}{br}"
                     # Want to not use div here, should warn to not use []? 
-                    base_contraints = pobes[bone.name].constraints
+                    base_constraints = pobes[bone.name].constraints
                     if ik_already_present := base_contraints.get(ik_name):
-                        base_contraints.remove(ik_already_present)
+                        base_constraints.remove(ik_already_present)
                         # add a function to common to copy settings...?
-                    new_ik = base_contraints.copy(ik_constraint)
+                    new_ik = base_constraints.copy(ik_constraint)
                     new_ik.name = ik_name
                     new_ik.target = rig # This is to remove the terminal error
 

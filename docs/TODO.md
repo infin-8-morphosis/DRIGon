@@ -3,6 +3,7 @@ __Drake-Rigger - Notes__
 # Symmetry
 
 Still gotta make a thing to symmetrise a rig.
+
     Go through all bones
         Check if the tail-end of the bone is at X 0
         If it isnt, duplicate the bone
@@ -10,6 +11,25 @@ Still gotta make a thing to symmetrise a rig.
         Flip the roll
         Rename it to .L or .R, strip the .001
         Not sure if using ops is better for some of this. Less control.
+
+    # This has to be done after components are merged
+    for bone in composer.data.edit_bones:
+        if bone.tail.x != 0 or bone.head.x != 0: # Could also check for valid suffix
+            dupe = duplicate_bone_EDIT(composer, bone.name, split_name(bone.name, -1))
+            # Uhhh okay we have to deal with the .001 problem now
+            dupe.tail.x = -dupe.tail.x
+            dupe.head.x = -dupe.head.x
+            dupe.roll = -dupe.roll
+            # Must account for all valid suffixes before release. in a switch / match statement
+            if bone.name.endswith('.L'): dupe.name[-1] = 'R'
+            elif bone.name.endswith('.R'): dupe.name[-1] = 'L'
+            else:
+                if bone.tail.x < 0 or bone.head.x < 0: bone.name, dupe.name += '.L', '.R'
+                else: bone.name, dupe name += '.R', '.L'
+    # Took a screenshot of this fixedish but it seemingly crashed blender
+
+
+
 And a thing to add bones to a vertex groups points in normal orientation
     Can either: Add real bones onto a vertex groups points using vertex parenting
     and some scripting to access the vertex groups points
