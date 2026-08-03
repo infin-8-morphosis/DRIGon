@@ -48,6 +48,20 @@ def get_bone_chain(chain_base,list = []):
 	assert list[-1] == chain_base.name, "Chain base not last in list."
 	return list
 
+# Untested in real conditions!
+def check_dupe_name(name: str):
+	end = name[-3:]
+	check = int(end) if end.isdecimal() else None
+	if check == None:
+		return name
+	if int(end) == 999:
+		raise ValueError('No room for more bones of this name.')
+	if int(end) == 1:
+		return name[:-4]
+	else:
+		num = int(end) - 1
+		return name[:-3] + str(num).zfill(3)
+
 
 # Returns a copy of an armature with desired name and fate.
 def copy_armature(old, name, fate: str):

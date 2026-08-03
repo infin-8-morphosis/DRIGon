@@ -1,3 +1,7 @@
+Is it possible to make a function in common, that is called whenever an operation is
+done, to set the composer, target, base, etc.?
+Then maybe itd be less messy invoking and checking each of these...?
+
 Other Ideas
 ----------------------------------------------------------------------------------------------------
     Character selector

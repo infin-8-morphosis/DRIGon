@@ -1,6 +1,6 @@
 import bpy, mathutils
 from .common import split_name, list_names, get_bone_chain, select_bones
-from .common import dnd, div, br, bl, keep_composer
+from .common import dnd, div, br, bl, keep_composer, check_dupe_name
 
 # This feels unsafe but idk... This grabs all the attributes for EditBones.
 property_list = []
@@ -70,11 +70,7 @@ def duplicate_bone_EDIT(armature, bone_name, set):
 
     copy_name = f"{set.name}{div}{bone_name.split(div)[-1]}"
     copy = armature.edit_bones.new(copy_name)
-    # TODO: lmao it doesnt work with the numbers? How has this not caused problems?
-    # if bone_name.split('.')[-1] == '.001':
-    #     copy.name.removesuffix('.002')
-    # else:
-    copy.name.removesuffix('.001')
+    check_dupe_name(copy_name)
     map_bone_settings(copy, armature.edit_bones[bone_name], False)
     return copy
 

@@ -1,5 +1,7 @@
 __Drake-Rigger - Notes__
 
+Add asserts on those EDIT functions to make sure they are indeed being used in edit mode?
+
 # Symmetry
 
 Still gotta make a thing to symmetrise a rig.
