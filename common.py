@@ -25,6 +25,7 @@ dnd = drig_naming_dict
 div, br, bl = dnd['divider'], dnd['bracket_right'], dnd['bracket_left']
 
 
+# full_name.name is wierd but i assume its like that for a reason...?
 def split_name(full_name, part: int):
 	split = full_name.name.split(div)
 	if part > (len(split)-1): 	return 
@@ -48,19 +49,20 @@ def get_bone_chain(chain_base,list = []):
 	assert list[-1] == chain_base.name, "Chain base not last in list."
 	return list
 
+
 # Untested in real conditions!
 def check_dupe_name(name: str):
-	end = name[-3:]
-	check = int(end) if end.isdecimal() else None
-	if check == None:
+	end = name[-3:] 								# slice of last 3 characters
+	suffix = int(end) if end.isdecimal() else None	
+	if suffix == None:								# non-numeric are ignored
 		return name
-	if int(end) == 999:
-		raise ValueError('No room for more bones of this name.')
-	if int(end) == 1:
+	if suffix >= 999:
+		raise ValueError('No more room for bones of this name.')
+	if suffix == 1:									# removes .001
 		return name[:-4]
-	else:
-		num = int(end) - 1
-		return name[:-3] + str(num).zfill(3)
+	else:											# lowers number by one
+		suffix -= 1
+		return name[:-3] + str(suffix).zfill(3)		# fills extra zeroes
 
 
 # Returns a copy of an armature with desired name and fate.
@@ -71,6 +73,8 @@ def copy_armature(old, name, fate: str):
 	new.drig_fate = f"{fate}"
 	return new
 
+
+# So wtf is going on here with name_list = None...
 def select_bones(bool: bool, object, blender_mode, name_list = None):
 	if name_list != None:
 		bpy.ops.object.mode_set(mode= blender_mode)

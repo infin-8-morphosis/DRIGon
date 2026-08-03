@@ -1,6 +1,9 @@
 
 # This has to be done after components are merged
 
+# find_and_connect_at_base() may be useful here...? 
+# But if the dupe has the same parent surely in most case we can just flip the suffix
+
 # Functional! Only visual, still needs to symmetrise parenting and properties, 
 # But works! 
 bone_list = []
@@ -14,6 +17,7 @@ for bone in bone_list:
         dupe.tail.x = -dupe.tail.x
         dupe.head.x = -dupe.head.x 
         dupe.roll = -dupe.roll
+        dupe.use_connect = bone.use_connect
         # Must account for all valid suffixes before release. in a switch/match statement
         dname = list(bone.name)
         print(dname)
