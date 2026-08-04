@@ -51,13 +51,18 @@ class ARMATURE_OT_drig_decompose(bpy.types.Operator):
     
     def execute(self,context):
 
+        rig = context.object # Selection: RIG
+        decomposer = copy_armature(rig, dnd['decomposer'], 'FINALISE')
+        decomposer.data = rig.data.copy()
+        context.collection.objects.link(decomposer)
+
 
         def remove_IK_bones_EDIT():
             assert bpy.context.mode == 'EDIT_ARMATURE', "Not in EDIT mode!"
 
             chopping_block = []
             for bone in decomposer.data.edit_bones:
-                print(bone.name)
+                print(bone)
                 if son(bone, 0) == dnd['ik']:
                     chopping_block.append(bone)
             for bone in chopping_block:
@@ -82,18 +87,15 @@ class ARMATURE_OT_drig_decompose(bpy.types.Operator):
                         # add a function to common to copy settings...?
                     new_ik = base_constraints.copy(ik_constraint)
                     new_ik.name = ik_name
+                    new_ik.mute = True
                     new_ik.target = rig # This is to remove the terminal error
-
-
-        rig = context.object # Selection: RIG
-        decomposer = copy_armature(rig, dnd['decomposer'], 'FINALISE')
-        decomposer.data = rig.data.copy()
-        context.collection.objects.link(decomposer)
 
         for bone in decomposer.data.bones:
             if bone.drig_function_type != 'NONE':
                 transfer_function_constraint(bone.drig_function_type)
 
+        rig.select_set(False) # Selection: None
+        decomposer.select_set(True)  # Selection: DECOMPOSER
         bpy.ops.object.mode_set(mode='EDIT')
         remove_IK_bones_EDIT()
         bpy.ops.object.mode_set(mode='OBJECT')

@@ -4,6 +4,11 @@ Store the starting blender mode, and return to it once a function / op is done
 
 Add asserts on those EDIT functions to make sure they are indeed being used in edit mode?
 
+Add-On setting to have the DRIGon panel in the objects properties rather than the armatures?
+
+Need to sanitise selections and mode changes... Every ops should end in the correct mode.
+Usually object mode.
+
 # Symmetry
 
 Symmetry is at MVP. Needs to be tested to see what exactly needs symmetrising. 

@@ -29,28 +29,37 @@ class ARMATURE_OT_drig_finalise(bpy.types.Operator):
         
         composer = context.object # Selection: Composer
         base = composer.drig_base
-        # At some point this will have a function to do this per morph.
-        if base.drig_target_main:
-            target = base.drig_target_main
-        else:
-            bpy.ops.armature.drig_make_target()
-            target = bpy.data.objects[f"{dnd['target']}{div}{son(composer,1)}"]
+        
+
+        def get_target():
+            if base.drig_target_main:
+                return base.drig_target_main
+            else:
+                bpy.ops.armature.drig_make_target()
+                return bpy.data.objects[f"{dnd['target']}{div}{son(composer,1)}"]
+
+
+        def set_target():
             composer.drig_target_main = target
             base.drig_target_main = target
+        
+        
+        target = get_target() # At some point this will have a function to do this per morph.
+        set_target()
         target.select_set(True) # Seleced: RIG | Selection: Comp, RIG
-        bpy.ops.object.mode_set(mode='OBJECT')
+    
+        # copy bones from composer to target in ONE edit mode
         bpy.ops.object.mode_set(mode='EDIT')
         for bone in composer.data.bones:
             transfer_bone_EDIT(composer, target, bone.name)
-        # for bone in composer
-        # make new bone with matching matrix
 
-        # copy bones from composer to target in ONE edit mode
+        bpy.ops.object.mode_set(mode='OBJECT')
+
         return {'FINISHED'}
 
 
 
-def map_bone_settings(receiver, sender, final):
+def map_bone_settings(receiver, sender, final): # wtf is final
 
         for prop in property_list:
             if sender.is_property_readonly(prop): continue
@@ -116,11 +125,13 @@ def merge_components(base, composer):
         bpy.context.view_layer.objects.active = composer
         bpy.ops.object.join()
 
-    # Finds a bone that overlaps and parents / connects it to the base. Assumes only one does!
+    # Finds a bone that overlaps and parents / connects it to the base. 
+    # Assumes only one does!
     def find_and_connect_at_base(transform, name):
         master_set = composer.data.collections_all[dnd['master_set']]
         for each in master_set.bones_recursive:
-            if each.head_local == transform: # TODO: Minus component transform so this works outside 0,0,0
+            if each.head_local == transform: 
+                # TODO: Minus component transform so this works outside 0,0,0
                 bpy.ops.object.mode_set(mode='EDIT')
                 e_bones = composer.data.edit_bones
                 e_bones[each.name].parent = e_bones[name]

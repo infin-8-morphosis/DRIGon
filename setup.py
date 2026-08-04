@@ -3,13 +3,14 @@ from .common import split_object_name as son, copy_armature
 from .common import dnd, div
 
 
-# Checks every armature for correct target / base properties, sets fates and checks for rigify.
+# Checks every armature for correct target / base properties, sets fates and 
+# checks for rigify.
 class ARMATURE_OT_drig_initialise(bpy.types.Operator):
     bl_idname = "armature.drig_initialise"
     bl_label = "Initialise"
     bl_options = {'REGISTER', 'UNDO'}
     
-    def execute(self,context):
+    def execute(self, context):
 
 
         def main():
@@ -25,7 +26,7 @@ class ARMATURE_OT_drig_initialise(bpy.types.Operator):
                         object.drig_fate = determine_fate(rigify_check,object)
             
 
-        def determine_fate(rigify_check,subject):
+        def determine_fate(rigify_check, subject):
 
             base = subject.drig_base
             target = subject.drig_target_main
@@ -75,7 +76,11 @@ class ARMATURE_OT_drig_initialise(bpy.types.Operator):
         #How to make this shorter...?
         def check_for_rigify(armature):
             try:
-                if bpy.types.Armature.rigify_target_rig or armature.get("rig_id") or armature.get('rigify_target_rig'):
+                if (
+                    bpy.types.Armature.rigify_target_rig or 
+                    armature.get("rig_id") or 
+                    armature.get('rigify_target_rig')
+                    ):
                     return True
             except:
                 return False
@@ -86,7 +91,8 @@ class ARMATURE_OT_drig_initialise(bpy.types.Operator):
 
 
 
-# Adjusts properties and names, adds COMPOSITION_SETS. Assigns all current bones to BASE set.
+# Adjusts properties and names, adds COMPOSITION_SETS. Assigns all current 
+# bones to BASE set.
 class ARMATURE_OT_drig_prepare_base(bpy.types.Operator):
     bl_idname = "armature.drig_prepare_base"
     bl_label = "Prepare Base"
@@ -110,6 +116,8 @@ class ARMATURE_OT_drig_prepare_base(bpy.types.Operator):
 
         return {'FINISHED'}
 
+
+
 # Copies base and adds itself to the scene, adjusts properties.
 class ARMATURE_OT_drig_make_target(bpy.types.Operator):
     bl_idname = "armature.drig_make_target"
@@ -118,6 +126,7 @@ class ARMATURE_OT_drig_make_target(bpy.types.Operator):
     
     def execute(self,context):
 
+        
         base = context.object
         target = copy_armature(base, dnd['target'], 'DECOMPOSE')
         context.collection.objects.link(target)
@@ -125,9 +134,13 @@ class ARMATURE_OT_drig_make_target(bpy.types.Operator):
         base.drig_target_main = target
         base.drig_fate = 'FINALISE'
         target.drig_target_main = target
-        target.drig_base = base
+        if son(context.object,0) == 'COMPOSER':
+            target.drig_base = context.object.drig_base
+        else:
+            target.drig_base = base
 
         return {'FINISHED'}
+
 
 
 classes = [ARMATURE_OT_drig_initialise,

@@ -5,10 +5,34 @@ Notes
     mostly consistent. Losing scaling or accidentally messing up models is worse...
 
 Code Snippets
-----------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------
+```
+
+        # Probably worth it to move some of these bone list operations into a function
+        # that we use as a parameter
+
+        def get_bone_list(object):
+            bone_list = []
+
+            for bone in object.data.bones:
+                bone_list.append(bone)
+
+            return bone_list
+
+
+        def get_set_names(bone_list):
+
+            for bone in bone_list:
+                if son(bone,0) not in set_list:
+                    set_list.append(son(bone,0))
+
+            return set_list
+        
+        get_set_names(get_bone_list(object))
+```
 ```
     Ask if block exists / get block if unsure block exists
-        bpy.context.scene.objects.get("RIG_Armature")
+        bpy.data.objects.get("RIG_Armature")
 ```
     Checks deform on all bones with FORM_ in name, unchecks it on everything else
         for bone in bpy.context.object.data.edit_bones:

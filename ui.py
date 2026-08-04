@@ -11,7 +11,7 @@ class BONE_PT_drig_ui_bones(bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
-        return context.object.type == 'ARMATURE'
+        return context.object.type == 'ARMATURE' and context.mode != 'EDIT_ARMATURE'
 
     def draw(self, context):
         object = context.object
@@ -28,7 +28,7 @@ class BONE_PT_drig_ui_bones(bpy.types.Panel):
         
         chain_area.label(text="Chain")
         chain_area.prop(bone, 'drig_chain_type', text="", placeholder="Type")
-        if context.active_bone.drig_chain_type not in ['SINGLE', 'JOINT']:
+        if context.active_bone.get('drig_chain_type') not in ['SINGLE', 'JOINT']:
             chain_area.prop(bone, 'drig_chain_amount', text="", placeholder="Amount")
 
         func_area.label(text="Function")
@@ -38,6 +38,7 @@ class BONE_PT_drig_ui_bones(bpy.types.Panel):
         comp_area.label(text="Component")
         comp_area.prop(bone,'drig_component_target', text="", placeholder="Target")
         comp_area.prop_search(bone, 'drig_component_set', armature, "collections_all", text="")
+
 
 
 class DATA_PT_drig_ui_main(bpy.types.Panel):
@@ -83,7 +84,7 @@ class DATA_PT_drig_ui_main(bpy.types.Panel):
         operations = main.column()
         determine_operations()
 
-        # Why doent just doing this work anymore???
+        # Why doesnt just doing this work anymore???
         # if context.object.get('drig_base'):
         try:    
             if context.object.drig_base:
@@ -165,6 +166,7 @@ class DATA_PT_drig_ui_rig_structure(bpy.types.Panel):
             draw_set(set)
 
 
+
 class DATA_PT_drig_ui_morphs(bpy.types.Panel):
     bl_space_type = 'PROPERTIES'
     bl_region_type = 'WINDOW'
@@ -215,6 +217,7 @@ class DATA_PT_drig_ui_morphs(bpy.types.Panel):
             edit.enabled = False
 
 
+
 class DATA_PT_drig_ui_info(bpy.types.Panel):
     bl_space_type = 'PROPERTIES'
     bl_region_type = 'WINDOW'
@@ -241,6 +244,7 @@ class DATA_PT_drig_ui_info(bpy.types.Panel):
         column = layout.column()
 
 
+
 class DATA_PT_drig_tools(bpy.types.Panel):
     bl_space_type = 'PROPERTIES'
     bl_region_type = 'WINDOW'
@@ -257,7 +261,7 @@ class DATA_PT_drig_tools(bpy.types.Panel):
         layout.use_property_decorate = False
 
         operations = layout.column()
-        operations.operator('armature.drig_tools_test_function')
+        operations.operator('armature.drig_test_function')
         operations.operator('armature.drig_tools_apply_pose')
         operations.operator('armature.drig_tools_split_recursive')
         #operations.operator('armature.drig_tools_dissolve_chain')
