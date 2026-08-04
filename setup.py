@@ -1,5 +1,5 @@
 import bpy
-from .common import split_name, copy_armature
+from .common import split_object_name as son, copy_armature
 from .common import dnd, div
 
 
@@ -44,14 +44,14 @@ class ARMATURE_OT_drig_initialise(bpy.types.Operator):
 
         def find_stray_assignments(suspect):
 
-            if split_name(suspect,0) not in dnd.values():
+            if son(suspect,0) not in dnd.values():
                 return False
 
             for object in bpy.data.objects:
 
                 if object.type != 'ARMATURE': continue
-                if split_name(object,0) not in dnd.values(): continue
-                if split_name(suspect,0) == split_name(object,0): continue
+                if son(object,0) not in dnd.values(): continue
+                if son(suspect,0) == son(object,0): continue
 
                 if object.drig_base == suspect.drig_base:
                     suspect.drig_target_main = object
@@ -60,12 +60,12 @@ class ARMATURE_OT_drig_initialise(bpy.types.Operator):
                     suspect.drig_base = object
                     return True
 
-                if split_name(suspect,1) == split_name(object,1):
-                    if split_name(object,0) == dnd['target']:
+                if son(suspect,1) == son(object,1):
+                    if son(object,0) == dnd['target']:
                         suspect.drig_target_main = object
                         object.drig_base = suspect
                         return True
-                    elif split_name(object,0) == dnd['base']:
+                    elif son(object,0) == dnd['base']:
                         object.drig_target_main = suspect
                         suspect.drig_base = object
                         return True
@@ -118,13 +118,14 @@ class ARMATURE_OT_drig_make_target(bpy.types.Operator):
     
     def execute(self,context):
 
-        target = copy_armature(context.object, dnd['target'], 'DECOMPOSE')
+        base = context.object
+        target = copy_armature(base, dnd['target'], 'DECOMPOSE')
         context.collection.objects.link(target)
-        target.data.name = f"{dnd['armature']}{div}{split_name(context.object,1)}{div}{split_name(context.object.data,-1)}"
-        context.object.drig_target_main = target
-        context.object.drig_fate = 'FINALISE'
+        target.data.name = f"{dnd['armature']}{div}{son(base,1)}{div}{son(base.data,-1)}"
+        base.drig_target_main = target
+        base.drig_fate = 'FINALISE'
         target.drig_target_main = target
-        target.drig_base = context.object
+        target.drig_base = base
 
         return {'FINISHED'}
 

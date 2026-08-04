@@ -12,7 +12,7 @@ for bone in composer.data.edit_bones:
 
 for bone in bone_list:
     if bone.tail.x != 0 or bone.head.x != 0: # Could also check for valid suffix
-        dupe = duplicate_bone_EDIT(composer.data, bone.name, split_name(bone, -1))
+        dupe = duplicate_bone_EDIT(composer.data, bone.name, son(bone, -1))
         # Uhhhh okay we have to deal with the .001 problem now
         dupe.tail.x = -dupe.tail.x
         dupe.head.x = -dupe.head.x 

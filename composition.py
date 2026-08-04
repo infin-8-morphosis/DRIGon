@@ -1,6 +1,7 @@
 import bpy, mathutils
-from .common import split_name, list_names, get_bone_chain, select_bones
+from .common import split_object_name as son, list_names, get_bone_chain, select_bones
 from .common import dnd, div, br, bl, keep_composer, check_dupe_name
+
 
 # This feels unsafe but idk... This grabs all the attributes for EditBones.
 property_list = []
@@ -33,7 +34,7 @@ class ARMATURE_OT_drig_finalise(bpy.types.Operator):
             target = base.drig_target_main
         else:
             bpy.ops.armature.drig_make_target()
-            target = bpy.data.objects[f"{dnd['target']}{div}{split_name(composer,1)}"]
+            target = bpy.data.objects[f"{dnd['target']}{div}{son(composer,1)}"]
             composer.drig_target_main = target
             base.drig_target_main = target
         target.select_set(True) # Seleced: RIG | Selection: Comp, RIG
@@ -57,6 +58,7 @@ def map_bone_settings(receiver, sender, final):
 
 
 def transfer_bone_EDIT(composer, target, bone_name):
+    assert bpy.context.mode == 'EDIT_ARMATURE', "Not in EDIT mode!"
 
     if (e_bones := target.data.edit_bones).get(bone_name):
         targbone = e_bones[bone_name]
@@ -67,6 +69,7 @@ def transfer_bone_EDIT(composer, target, bone_name):
 
 
 def duplicate_bone_EDIT(armature, bone_name, set):
+    assert bpy.context.mode == 'EDIT_ARMATURE', "Not in EDIT mode!"
 
     copy_name = f"{set.name}{div}{bone_name.split(div)[-1]}"
     copy = armature.edit_bones.new(copy_name)
@@ -107,14 +110,14 @@ def merge_components(base, composer):
         return component
 
     # Literally just uses the join operation
-    def join_component(composer, component):
+    def join_component(component):
         bpy.ops.object.mode_set(mode='OBJECT')
         bpy.data.objects[component.name].select_set(True)
         bpy.context.view_layer.objects.active = composer
         bpy.ops.object.join()
 
     # Finds a bone that overlaps and parents / connects it to the base. Assumes only one does!
-    def find_and_connect_at_base(composer, transform, name):
+    def find_and_connect_at_base(transform, name):
         master_set = composer.data.collections_all[dnd['master_set']]
         for each in master_set.bones_recursive:
             if each.head_local == transform: # TODO: Minus component transform so this works outside 0,0,0
@@ -138,15 +141,16 @@ def merge_components(base, composer):
         component = copy_component(original)
         bpy.context.collection.objects.link(component)
         transform = save_transform(composer, name, component, original)
-        join_component(composer, component)
-        find_and_connect_at_base(composer, transform, name) # Doesnt report if none found
+        join_component(component)
+        find_and_connect_at_base(transform, name) # Doesnt report if none found
 
 
 def determine_parent_EDIT(armature, bone_name, set):
+    assert bpy.context.mode == 'EDIT_ARMATURE', "Not in EDIT mode!"
 
     def parent_as_kept():
         if bep := base_equiv.parent:
-            kept = armature.edit_bones[f"{set.name}{div}{split_name(bep,-1)}"]
+            kept = armature.edit_bones[f"{set.name}{div}{son(bep,-1)}"]
         else:
             kept = None
         armature.edit_bones[bone_name].use_connect = connect
@@ -185,10 +189,10 @@ def add_trans_constraints(object, bone_name, set):
 
 def add_drig_function(object, bone_name):
 
-    def add_ik_target_EDIT(object, ik, chain):
+    def add_ik_target_EDIT(ik, chain):
+        assert bpy.context.mode == 'EDIT_ARMATURE', "Not in EDIT mode!"
 
-        bpy.ops.object.mode_set(mode='EDIT')
-        select_bones(False, object, 'EDIT') # Deselected: All Bones 
+        select_bones(False, object) # Deselected: All Bones 
         bones_EDIT = object.data.edit_bones
         bones_EDIT[chain[0]].select_tail = True # Selected: End bone
         bpy.ops.armature.extrude_move(TRANSFORM_OT_translate={
@@ -204,7 +208,8 @@ def add_drig_function(object, bone_name):
         ik.subtarget = bones_POSE[ik_bone_name].name
         object.data.collections_all[dnd['master_set']].assign(bones_POSE[ik_bone_name])
         # This won't work if the constraint name isn't known...
-        select_bones(False, object, 'EDIT') # Deselected: All Bones
+        bpy.ops.object.mode_set(mode='EDIT')
+        select_bones(False, object) # Deselected: All Bones
 
     bone = object.data.bones[bone_name]
     set = object.data.collections_all.get(bone.drig_function_set)
@@ -214,11 +219,13 @@ def add_drig_function(object, bone_name):
         chain = get_bone_chain(object.data.bones[bone_name])
         ik = object.pose.bones[chain[0]].constraints.new('IK')
         ik.chain_count = len(chain)
-        add_ik_target_EDIT(object, ik, chain) # Note: Renamed Sets need to be refreshed as the function breaks in the bone menu
+        bpy.ops.object.mode_set(mode='EDIT')
+        add_ik_target_EDIT(ik, chain) # Note: Renamed Sets need to be refreshed as the function breaks in the bone menu
         chain[:] = []
 
 
 def split_bone_recursive_EDIT(object, bone, amount: int, start = True, count = 0):
+    assert bpy.context.mode == 'EDIT_ARMATURE', "Not in EDIT mode!"
 
     if amount <= 0: return "Don't."
     bpy.ops.armature.subdivide()             

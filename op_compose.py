@@ -1,6 +1,6 @@
 import bpy
 from .composition import *
-from .common import copy_armature, keep_composer
+from .common import copy_armature, keep_composer, split_object_name as son
 
 
 class ARMATURE_OT_drig_compose(bpy.types.Operator):
@@ -8,9 +8,10 @@ class ARMATURE_OT_drig_compose(bpy.types.Operator):
     bl_label = "Compose to Composer"
     bl_options = {'REGISTER', 'UNDO'}
 
-
     def execute(self, context):
 
+        base = context.object.drig_base # Selection: Base
+        composer = copy_armature(base, dnd['composer'], 'FINALISE')
 
         def compose_bone(bone, set):
 
@@ -27,33 +28,28 @@ class ARMATURE_OT_drig_compose(bpy.types.Operator):
             # Set all base_set bones to be non-deforming?
 
 
-        def compose_set(composer, set):
+        def compose_set(set):
             if set.name != dnd['base_set']:
                 bpy.ops.object.mode_set(mode='OBJECT')
-                bone_list = list_names(set.bones)
-                for bone in bone_list:
+                for bone in list_names(set.bones):
                     compose_bone(bone, set)
             if set.children: 
                 for child in set.children:
-                    compose_set(composer, child)
+                    compose_set(child)
 
 
-        def process_chain_EDIT(composer, bone):
+        def process_chain_EDIT(bone):
             if bone.drig_chain_type == 'SPLIT':
                 bpy.ops.armature.subdivide(number_cuts = bone.drig_chain_amount)
 
 
-            # Copies base, adds new armature, removes all bones from bone groups, except COMPOSITION_SETS.
-            # This is where components are joined. Should that be separated too?
-            # I really feel like this should be tidied...
+        # Copies base, adds new armature, removes all bones from bone groups, except COMPOSITION_SETS.
+        # This is where components are joined. Should that be separated too?
+        # I really feel like this should be tidied...
 
-
-        base = context.object.drig_base # Selection: Base
-        composer = copy_armature(base, dnd['composer'], 'FINALISE')
         if keep_composer: context.collection.objects.link(composer)
         composer.drig_base = base
-        sn = split_name
-        composer.data.name = f"{dnd['composer']}{div}{sn(composer,1)}{div}{sn(base.data,-1)}"
+        composer.data.name = f"{dnd['composer']}{div}{son(composer,1)}{div}{son(base.data,-1)}"
 
         bpy.data.objects[base.name].select_set(False) #Deselected: Base | Selection: None
 
@@ -78,14 +74,14 @@ class ARMATURE_OT_drig_compose(bpy.types.Operator):
         for bone in base_set.bones: # Add chains here?
             if bone.drig_chain_type != 'SINGLE':
                 bpy.ops.object.mode_set(mode='EDIT')
-                select_bones(False, composer, 'EDIT') # I swear that last parameter isnt used
+                select_bones(False, composer) # I swear that last parameter isnt used
                 composer.data.edit_bones.active = composer.data.edit_bones[bone.name]
-                process_chain_EDIT(composer, bone)
+                process_chain_EDIT(bone)
                 bpy.ops.object.mode_set(mode='OBJECT')
 
         bpy.ops.object.mode_set(mode='EDIT')
         for set in comp_set.children: 
-            compose_set(composer, set)
+            compose_set(set)
 
         # Why does this need to be in edit mode?
         for bone in base_set.bones:

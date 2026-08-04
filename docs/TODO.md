@@ -1,5 +1,7 @@
 __Drake-Rigger - Notes__
 
+Store the starting blender mode, and return to it once a function / op is done
+
 Add asserts on those EDIT functions to make sure they are indeed being used in edit mode?
 
 # Symmetry

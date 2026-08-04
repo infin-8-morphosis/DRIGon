@@ -2,7 +2,7 @@ import bpy #type:ignore
 
 from . import propmanager, common, setup
 from . import composition, tools
-from . import op_compose, op_decompose
+from . import op_compose, op_decompose, op_test_and_assert
 from . import ui
 # order may be important. ie dont import if havent imported a files dependencies
 
@@ -25,11 +25,13 @@ def register():
     tools.register()
     op_compose.register()
     op_decompose.register()
+    op_test_and_assert.register()
     ui.register()
     
 def unregister():
     for cls in classes: bpy.utils.unregister_class(cls)
     ui.unregister()
+    op_test_and_assert.unregister()
     op_decompose.unregister()
     op_compose.unregister()
     tools.unregister()

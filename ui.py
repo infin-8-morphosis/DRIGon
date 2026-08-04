@@ -1,6 +1,6 @@
 import bpy
 from bpy.types import (Panel, Operator, Armature) #type:ignore
-from .common import split_name, dnd, div
+from .common import split_object_name as son, dnd, div
 
 
 class BONE_PT_drig_ui_bones(bpy.types.Panel):
@@ -83,22 +83,26 @@ class DATA_PT_drig_ui_main(bpy.types.Panel):
         operations = main.column()
         determine_operations()
 
-        if object.get('drig_base'):
+        # Why doent just doing this work anymore???
+        # if context.object.get('drig_base'):
+        try:    
+            if context.object.drig_base:
+                titles = main.row()
+                subjects = main.row()
 
-            titles = main.row()
-            subjects = main.row()
+                titles.label(text="Base")
+                titles.label(text="Target")
 
-            titles.label(text="Base")
-            titles.label(text="Target")
+                base = subjects.column()
+                target = subjects.column()
+                
+                base.prop(object,'drig_base', text="", placeholder="Base")
+                target.prop(object,'drig_target_main', text="", placeholder="Not Composed")
 
-            base = subjects.column()
-            target = subjects.column()
-            
-            base.prop(object,'drig_base', text="", placeholder="Base")
-            target.prop(object,'drig_target_main', text="", placeholder="Not Composed")
+                if object == object.drig_base:          base.enabled = False
+                if object == object.drig_target_main:   target.enabled = False
+        except: return 
 
-            if object == object.drig_base:          base.enabled = False
-            if object == object.drig_target_main:   target.enabled = False
 
 
 class DATA_PT_drig_ui_rig_structure(bpy.types.Panel):
@@ -110,7 +114,10 @@ class DATA_PT_drig_ui_rig_structure(bpy.types.Panel):
     
     @classmethod
     def poll(cls, context):
-        return context.object.get('drig_base')
+        # For some reason return context.object.get('drig_base' isnt working on 
+        # newer versions. Bug? Try is hacky but works, probably much slower
+        try:    return context.object.drig_base
+        except: return None
 
     def draw(self, context):
 
@@ -169,7 +176,7 @@ class DATA_PT_drig_ui_morphs(bpy.types.Panel):
     @classmethod
     def poll(cls, context):
         object = context.object.data
-        return split_name(object,0) == dnd['morph']
+        return son(object,0) == dnd['morph']
 
     def draw(self, context):
 
@@ -191,14 +198,14 @@ class DATA_PT_drig_ui_morphs(bpy.types.Panel):
         edit.operator("mesh.primitive_cube_add", text="Clear Morph")
         edit.operator("mesh.primitive_cube_add", text="Delete Morph")
 
-        name = split_name(object.data,-1)
+        name = son(object.data,-1)
         morph_list.prop(object.data,'name',text=f"{name.capitalize()}", icon="ARMATURE_DATA")
 
         for armature in bpy.data.armatures:
             if armature == object.data: continue
             split = armature.name.split(div)
             if split[0] != dnd['morph']: continue
-            if split[1] != split_name(object.data.name,1): continue
+            if split[1] != son(object.data,1): continue
             else:
                 name = split[-1]
                 morph_list.prop(armature,'name',text=f"{name.capitalize()}", icon="ARMATURE_DATA")
@@ -218,7 +225,10 @@ class DATA_PT_drig_ui_info(bpy.types.Panel):
     
     @classmethod
     def poll(cls, context):
-        return context.object.get('drig_base')
+        # For some reason return context.object.get('drig_base' isnt working on 
+        # newer versions. Bug? Try is hacky but works, probably much slower
+        try:    return context.object.drig_base
+        except: return None
 
     def draw(self, context):
         layout = self.layout
@@ -247,9 +257,12 @@ class DATA_PT_drig_tools(bpy.types.Panel):
         layout.use_property_decorate = False
 
         operations = layout.column()
+        operations.operator('armature.drig_tools_test_function')
         operations.operator('armature.drig_tools_apply_pose')
         operations.operator('armature.drig_tools_split_recursive')
         #operations.operator('armature.drig_tools_dissolve_chain')
+
+        operations.operator('armature.drig_assert_base_matches_decomposer')
 
 
 classes = [BONE_PT_drig_ui_bones,

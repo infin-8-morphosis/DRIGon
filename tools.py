@@ -1,6 +1,40 @@
 import bpy
-from .common import split_name, list_names, copy_armature, get_bone_chain, select_bones
+from .common import split_object_name as son, list_names, copy_armature, get_bone_chain, select_bones
 from .common import dnd, div, br, bl, keep_composer
+
+
+
+class ARMATURE_OT_drig_tools_test_function(bpy.types.Operator):
+    bl_idname = "armature.drig_tools_test_function"
+    bl_label = "Test Function"
+    bl_options = {'REGISTER', 'UNDO'}
+    
+    def execute(self,context):
+
+        # Probably worth it to move some of these bone list operations into a function
+        # that we use as a parameter
+
+        def get_bone_list(object):
+            bone_list = []
+
+            for bone in object.data.bones:
+                bone_list.append(bone)
+
+            return bone_list
+
+
+        def get_set_names(bone_list):
+
+            for bone in bone_list:
+                if son(bone,0) not in set_list:
+                    set_list.append(son(bone,0))
+
+            return set_list
+        
+        get_set_names(get_bone_list(object))
+
+        return {'FINISHED'}
+
 
 
 class ARMATURE_OT_drig_tools_apply_pose(bpy.types.Operator):
@@ -34,6 +68,7 @@ class ARMATURE_OT_drig_tools_apply_pose(bpy.types.Operator):
         return {'FINISHED'}
 
 
+
 class ARMATURE_OT_drig_tools_rename_vertex_groups(bpy.types.Operator):
     bl_idname = "armature.drig_tools_rename_vertex_groups"
     bl_label = "Rename Vertex Groups"
@@ -57,6 +92,7 @@ class ARMATURE_OT_drig_tools_rename_vertex_groups(bpy.types.Operator):
         #     if n[0] in v_groups:
         #         v_groups[n[0]].name = n[1]
         return {'FINISHED'}
+
 
 
 class ARMATURE_OT_drig_tools_split_recursive(bpy.types.Operator):
@@ -123,7 +159,7 @@ def render_panel(self, context):
 
 
 
-classes = [ARMATURE_OT_drig_tools_apply_pose, ARMATURE_OT_drig_tools_split_recursive]
+classes = [ARMATURE_OT_drig_tools_test_function, ARMATURE_OT_drig_tools_apply_pose, ARMATURE_OT_drig_tools_split_recursive]
 
 def register():
     for cls in classes: bpy.utils.register_class(cls)

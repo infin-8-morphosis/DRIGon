@@ -25,9 +25,8 @@ dnd = drig_naming_dict
 div, br, bl = dnd['divider'], dnd['bracket_right'], dnd['bracket_left']
 
 
-# full_name.name is wierd but i assume its like that for a reason...?
-def split_name(full_name, part: int):
-	split = full_name.name.split(div)
+def split_object_name(object, part: int):
+	split = object.name.split(div)
 	if part > (len(split)-1): 	return 
 	else: 						return split[part]
 
@@ -68,25 +67,25 @@ def check_dupe_name(name: str):
 # Returns a copy of an armature with desired name and fate.
 def copy_armature(old, name, fate: str):
 	new = old.copy()
-	new.name = f"{name}{div}{split_name(old, 1)}"
+	new.name = f"{name}{div}{split_object_name(old, 1)}"
 	new.data = old.data.copy()
 	new.drig_fate = f"{fate}"
 	return new
 
 
-# So wtf is going on here with name_list = None...
-def select_bones(bool: bool, object, blender_mode, name_list = None):
+def select_bones(bool: bool, object, name_list = None):
+	context = bpy.context
+	if context.mode == 'EDIT_ARMATURE': subject = object.data.edit_bones
+	elif context.mode == 'POSE': subject = object.pose.bones
+	elif context.mode == 'OBJECT': subject = object.data.bones
 	if name_list != None:
-		bpy.ops.object.mode_set(mode= blender_mode)
-		if blender_mode == 'EDIT': subject = object.data.edit_bones
-		elif blender_mode == 'POSE': subject = object.pose.bones
-		elif blender_mode == 'OBJECT': subject = object.data.bones
 		for name in name_list:
+			print(name)
 			subject[name].select = bool
 			subject[name].select_head = bool
 			subject[name].select_tail = bool
 	else:
-		for each in object.data.edit_bones:
+		for each in subject:
 			each.select = bool
 			each.select_head = bool
 			each.select_tail = bool

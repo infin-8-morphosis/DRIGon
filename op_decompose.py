@@ -1,5 +1,6 @@
 import bpy
 from .composition import *
+from .common import split_object_name as son, copy_armature
 
 # TODO:
 # In theory this will all be in reverse, right?
@@ -36,7 +37,12 @@ from .composition import *
         # If the bone has a connected child, select recursive children of that child
         # If no bone is connected, assume all children are part of the component
         # UNLESS those children are part of IK, in which ignore them?
-# Should make some kind of comparer to check if the BASE is actually identical to itself unedited
+# Should make some kind of comparer to check if the BASE is actually identical 
+# to itself unedited
+
+# If we get a good rig comparer built, we should remove any redundant constraints
+# For things that will be replicated anyway via the bone functions
+# Unsure how exactly you'd determine if they're redundant tbh
 
 class ARMATURE_OT_drig_decompose(bpy.types.Operator):
     bl_idname = "armature.drig_decompose"
@@ -45,9 +51,44 @@ class ARMATURE_OT_drig_decompose(bpy.types.Operator):
     
     def execute(self,context):
 
+
+        def remove_IK_bones_EDIT():
+            assert bpy.context.mode == 'EDIT_ARMATURE', "Not in EDIT mode!"
+
+            chopping_block = []
+            for bone in decomposer.data.edit_bones:
+                print(bone.name)
+                if son(bone, 0) == dnd['ik']:
+                    chopping_block.append(bone)
+            for bone in chopping_block:
+                    decomposer.data.edit_bones.remove(bone)
+
+
+        def transfer_function_constraint(function):
+
+            pose_bones = decomposer.pose.bones
+            if function == 'IK_BASIC':
+                # Funnily the pose.bone and data.bone uses here are necessary
+                ik_equiv = decomposer.data.bones[f"{dnd['ik']}{div}{son(bone, -1)}"]
+                chainbase = pose_bones[get_bone_chain(ik_equiv)[0]]
+                if ik_constraint := chainbase.constraints.get(dnd['ik']):
+                    # Interesting. The copy actually sets it to the deleted IK bone...
+                    # ...which throws up an error in the terminal, which may annoy someone, though it is convenient.
+                    ik_name = f"FUNCTION{bl}{chainbase.name}{br}"
+                    # Want to not use div here, should warn to not use []? 
+                    base_constraints = pose_bones[bone.name].constraints
+                    if ik_already_present := base_constraints.get(ik_name):
+                        base_constraints.remove(ik_already_present)
+                        # add a function to common to copy settings...?
+                    new_ik = base_constraints.copy(ik_constraint)
+                    new_ik.name = ik_name
+                    new_ik.target = rig # This is to remove the terminal error
+
+
         rig = context.object # Selection: RIG
-        decomposer = copy_armature(rig, dnd['decomposer'], 'FINALISE', keep_composer)
+        decomposer = copy_armature(rig, dnd['decomposer'], 'FINALISE')
         decomposer.data = rig.data.copy()
+        context.collection.objects.link(decomposer)
 
         for bone in decomposer.data.bones:
             if bone.drig_function_type != 'NONE':
@@ -56,38 +97,10 @@ class ARMATURE_OT_drig_decompose(bpy.types.Operator):
         bpy.ops.object.mode_set(mode='EDIT')
         remove_IK_bones_EDIT()
         bpy.ops.object.mode_set(mode='OBJECT')
-        #bpy.ops.armature.separate()
 
+        
+        # bpy.ops.armature.separate()
 
-        def remove_IK_bones_EDIT():
-
-            chopping_block = []
-            for bone in decomposer.data.edit_bones:
-                if split_name(bone, 0) == dnd['ik']:
-                    chopping_block.append(bone)
-            for bone in chopping_block:
-                    decomposer.data.edit_bones.remove(bone)
-
-
-        def transfer_function_constraint(function):
-
-            pobes = decomposer.pose.bones
-            if function == 'IK_BASIC':
-                # Funnily the pose.bone and data.bone uses here are necessary
-                ik_equiv = decomposer.data.bones[f"{dnd['ik']}{div}{split_name(bone, -1)}"]
-                chainbase = pobes[get_bone_chain(ik_equiv)[0]]
-                if ik_constraint := chainbase.constraints.get(dnd['ik']):
-                    # Interesting. The copy actually sets it to the deleted IK bone...
-                    # ...which throws up an error in the terminal, which may annoy someone, though it is convenient.
-                    ik_name = f"FUNCTION{bl}{chainbase.name}{br}"
-                    # Want to not use div here, should warn to not use []? 
-                    base_constraints = pobes[bone.name].constraints
-                    if ik_already_present := base_contraints.get(ik_name):
-                        base_constraints.remove(ik_already_present)
-                        # add a function to common to copy settings...?
-                    new_ik = base_constraints.copy(ik_constraint)
-                    new_ik.name = ik_name
-                    new_ik.target = rig # This is to remove the terminal error
 
         return {'FINISHED'}
 
