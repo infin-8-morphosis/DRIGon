@@ -21,13 +21,18 @@ from .common import split_object_name as son, copy_armature
                 # where it should go.
 # 4. Constraints
     # Add them to BASE, idk more details
+
 # 4. Decompose Sets
     # Lets assume we're rebuilding COMPOSITION_SETS.
     # Cycle through all bones, have a list of prefixes
     # make comp sets, add sets, assign equiv BASE bones to the sets.
     # Delete all non-BASE/IK bones
     # Really poles and such should be part of base in some way to prevent confusion here...
-# 5. Components
+# # 5. Components
+#     for constraint in bone.constraints:
+#         if constraint.name.split(1, bl) == 'CONSTRAINT':
+#             select child of bone recursively, 
+#             (make drig_component_set into drig_component_root? We havent used it at all...)
     # The constraint is already there to tell us where to separate
     # The constraint is on the bone the component is attached to...
     # But what if theres multiple children...? Shouldnt it 

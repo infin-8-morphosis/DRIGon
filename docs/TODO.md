@@ -1,5 +1,8 @@
 __Drake-Rigger - Notes__
 
+Okay so we have a thing that goes through all the properties and checks if theyre identical. What now?
+Check if each bone is in the same place?
+
 Store the starting blender mode, and return to it once a function / op is done
 
 Add asserts on those EDIT functions to make sure they are indeed being used in edit mode?

@@ -37,7 +37,8 @@ class BONE_PT_drig_ui_bones(bpy.types.Panel):
 
         comp_area.label(text="Component")
         comp_area.prop(bone,'drig_component_target', text="", placeholder="Target")
-        comp_area.prop_search(bone, 'drig_component_set', armature, "collections_all", text="")
+        if bone.drig_component_target:
+            comp_area.prop_search(bone, 'drig_component_root', bone.drig_component_target.data, "bones", text="")
 
 
 

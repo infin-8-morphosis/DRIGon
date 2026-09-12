@@ -112,11 +112,13 @@ def save_transform(object, bone_name, component, original):
 
 def merge_components(base, composer):
     
+
     def copy_component(original):
         bpy.data.objects[original.name].select_set(False)
         component = original.copy()
         component.data = original.data.copy()
         return component
+
 
     # Literally just uses the join operation
     def join_component(component):
@@ -124,6 +126,15 @@ def merge_components(base, composer):
         bpy.data.objects[component.name].select_set(True)
         bpy.context.view_layer.objects.active = composer
         bpy.ops.object.join()
+
+
+    def connect_at_specified_root_EDIT(component_bone_name, root_name):
+        assert bpy.context.mode == 'EDIT_ARMATURE', "Not in EDIT mode!"
+
+        component_bone = composer.data.edit_bones[component_bone_name]
+        root_bone = composer.data.edit_bones[root_name]
+        root_bone.parent = component_bone
+
 
     # Finds a bone that overlaps and parents / connects it to the base. 
     # Assumes only one does!
@@ -142,6 +153,7 @@ def merge_components(base, composer):
      # This is the name of the bone with the component property
      # Ergo it is the attachment point. Should rename the list...?
     
+    
     component_list = []
     for bone in base.data.collections_all[dnd['master_set']].bones_recursive:
         if bone.drig_component_target:
@@ -153,7 +165,13 @@ def merge_components(base, composer):
         bpy.context.collection.objects.link(component)
         transform = save_transform(composer, name, component, original)
         join_component(component)
-        find_and_connect_at_base(transform, name) # Doesnt report if none found
+        if root := base.data.bones[name].drig_component_root:
+            # why is the other one not marked as EDIT? Is that redundant or necessary
+            bpy.ops.object.mode_set(mode='EDIT')
+            connect_at_specified_root_EDIT(composer.data.bones[name].name, root)
+            bpy.ops.object.mode_set(mode='OBJECT')
+        else:
+            find_and_connect_at_base(transform, name) # Doesnt report if none found
 
 
 def determine_parent_EDIT(armature, bone_name, set):

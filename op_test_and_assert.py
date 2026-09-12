@@ -8,8 +8,53 @@ class ARMATURE_OT_drig_test_function(bpy.types.Operator):
     bl_idname = "armature.drig_test_function"
     bl_label = "Test Function"
     bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self,context):
+
+        selection = context.object
+        base = context.object.drig_base
+
+        bone_list = []
+        for bone in context.object.pose.bones:
+            bone_list.append(bone)
+
+        for bone in bone_list:
+            for constraint in bone.constraints:
+                if base.data.collections_all.get('BASE'):
+                    new_const = base.pose.bones[bone.name].constraints.copy(constraint)  
+                else:
+                    new_const = base.pose.bones[son(bone, -1)].constraints.copy(constraint)
+                new_const.name = (f"{constraint.name.upper().replace(" ", "_")}[{bone.name}]")
+                new_const.mute = True
+                # name should have the intended bone and intended target
+                ## CONSTRAINT[{bone_name}][{target}]
+                #     actually, name the consts or funcs after what they do. simpler.
+                #     IK[{bone_name}|{target_bone}|{pole}|{ik_bone}] (last 2 optional)
+                #     COMPONENT[{comp_name}]
+                #     (make the caps match the internal names, then can automate the rename?)
+                # {target} could say parent, set_same, etc.
+                # Thatd preserve the settings and make rename issues less?
+        
+        return {'FINISHED'}
+
+
+
+class ARMATURE_OT_drig_assert_base_matches_decomposer(bpy.types.Operator):
+    bl_idname = "armature.drig_assert_base_matches_decomposer"
+    bl_label = "Base matches Decomposer?"
+    bl_options = {'REGISTER', 'UNDO'}
     
     def execute(self,context):
+
+        # Check if base is selected if you want this test to be available
+        # on the main panel
+        # Run all the operations in order
+        # Compose, Finalise, Decompose
+        # Then compare DECOMPOSER to BASE
+        # They should be identical since nothing has been done.
+        # Oh, this will catch redundancies introduced by decomp and
+        # then we can account for them.
+
 
         decomposer = context.object
         base = decomposer.drig_base
@@ -35,8 +80,6 @@ class ARMATURE_OT_drig_test_function(bpy.types.Operator):
         for attr in bpy.types.PoseBone.bl_rna.properties.items():
             if attr[0] in ['name', 'rna_type', 'collections']: continue
             if attr[0] in ['select', 'select_tail', 'select_head']: continue
-            # Idk if the others are even necessary. This one breaks stuff
-            # But previous me had a cryptic if statement about using it...?
             pose_property_list.append(attr[0])
 
         def compare_settings_EDIT(base, decomp):
@@ -54,13 +97,11 @@ class ARMATURE_OT_drig_test_function(bpy.types.Operator):
                 ):
                     if getattr(base, prop) != getattr(decomp, prop):
                         print(prop)
-                        print(getattr(base, prop), getattr(decomp, prop))
-                        
+                        print(getattr(base, prop), getattr(decomp, prop)) 
 
                 elif getattr(base, prop)[:] != getattr(decomp, prop)[:]:
                     print(prop)
                     print(getattr(base, prop)[:], getattr(decomp, prop)[:])
-
 
 
         def compare_settings_POSE(base, decomp):
@@ -75,8 +116,7 @@ class ARMATURE_OT_drig_test_function(bpy.types.Operator):
                 ):
                     if getattr(base, prop) != getattr(decomp, prop):
                         print(getattr(base, prop), getattr(decomp, prop))
-                        print("no index")
-                        
+                        print("no index")  
 
                 elif getattr(base, prop)[:] != getattr(decomp, prop)[:]:
                     print(getattr(base, prop)[:], getattr(decomp, prop)[:])
@@ -106,36 +146,34 @@ class ARMATURE_OT_drig_test_function(bpy.types.Operator):
             bpy.ops.object.mode_set(mode='OBJECT')
             # go through each's properties and make sure they're identical
             # print any that arent
-        
-
 
         return {'FINISHED'}
 
 
 
-class ARMATURE_OT_drig_assert_base_matches_decomposer(bpy.types.Operator):
-    bl_idname = "armature.drig_assert_base_matches_decomposer"
+# same thing but make sure decomposition makes a base that recomposes to the rig
+class ARMATURE_OT_drig_assert_composer_matches_rig(bpy.types.Operator):
+    bl_idname = "armature.drig_assert_composer_matches_rig"
     bl_label = "Base matches Decomposer?"
     bl_options = {'REGISTER', 'UNDO'}
     
     def execute(self,context):
 
-        # Check if base is selected if you want this test to be available
+        # Check if rig is selected if you want this test to be available
         # on the main panel
         # Run all the operations in order
-        # Compose, Finalise, Decompose
-        # Then compare DECOMPOSER to BASE
+        # Decompose, Finalise, Compose
+        # Then compare COMPOSER to RIG
         # They should be identical since nothing has been done.
         # Oh, this will catch redundancies introduced by decomp and
         # then we can account for them.
 
         base = context.object
-        bpy.ops.armature.drig_compose()
         bpy.ops.armature.drig_decompose()
+        bpy.ops.armature.drig_compose()
         decomposer = bpy.data.objects[f"{dnd['decomposer']}{div}{son(base, 1)}"]
 
         return {'FINISHED'}
-
 
 
 classes = [ARMATURE_OT_drig_test_function, ARMATURE_OT_drig_assert_base_matches_decomposer]

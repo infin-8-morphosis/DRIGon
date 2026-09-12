@@ -64,7 +64,7 @@ bt.Bone.drig_chain_type =           bp.EnumProperty(
     description="Divide a bone into a chain of bones")
 
 bt.Bone.drig_component_target =     bp.PointerProperty(type=bt.Object)
-bt.Bone.drig_component_set =        bp.StringProperty()
+bt.Bone.drig_component_root =       bp.StringProperty()
 bt.Bone.drig_component_connected =  bp.BoolProperty(
     description="Connects the bone at the origin point to the overlapping bone in the main armature, if one is present")
 #---------------------------------------------------------------------------------------------------
